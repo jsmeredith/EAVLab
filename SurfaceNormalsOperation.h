@@ -1,3 +1,4 @@
+// Copyright 2012 UT-Battelle, LLC.  See LICENSE.txt for more information.
 #ifndef OP_SURFACE_NORMALS_H
 #define OP_SURFACE_NORMALS_H
 

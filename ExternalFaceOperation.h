@@ -1,3 +1,4 @@
+// Copyright 2012 UT-Battelle, LLC.  See LICENSE.txt for more information.
 #ifndef OP_EXTERNAL_FACE_H
 #define OP_EXTERNAL_FACE_H
 
