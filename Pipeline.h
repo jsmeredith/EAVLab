@@ -111,11 +111,16 @@ struct Pipeline
 
         vector<string> sourcevars = source->source_file->GetFieldList(source->mesh);
         vars.insert(vars.end(), sourcevars.begin(), sourcevars.end());
-        return vars;
 
-        ///\todo: ask each operator what vars it can create, too.
-        /// how does it know what vars will be input to it?
+        /// ask each operator what vars it can create, too.
+        /// \todo: how does it know what vars will be input to it?
         /// well, now we need the metadata (forward part of contract?)
+        for (unsigned int i=0; i<ops.size(); i++)
+        {
+            vector<string> opvars = ops[i]->GetOutputVariables();
+            vars.insert(vars.end(), opvars.begin(), opvars.end());
+        }
+        return vars;
     }
 
     void Execute()

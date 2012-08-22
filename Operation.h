@@ -31,7 +31,7 @@ class Operation
     /// Get the variables the operation is requesting.
     virtual std::vector<std::string> GetNeededVariables() { return std::vector<std::string>(); }
     /// Get the variables this operation creates.
-    virtual std::vector<std::string> GetOutputvariables() { return std::vector<std::string>(); }
+    virtual std::vector<std::string> GetOutputVariables() { return std::vector<std::string>(); }
     /// Get the Attribute containing this operation's settings.
     virtual Attribute *GetSettings() = 0;
     /// Actual execution method for an operation.

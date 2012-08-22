@@ -85,6 +85,17 @@ class IsosurfaceOperation : public Operation
             vars.push_back(atts->field);
         return vars;
     }
+    virtual std::vector<std::string> GetOutputVariables()
+    {
+        std::vector<std::string> vars;
+        vars.push_back("revInputIndex");
+        vars.push_back("revInputSubindex");
+        vars.push_back("alpha");
+        vars.push_back("newx");
+        vars.push_back("newy");
+        vars.push_back("newz");
+        return vars;
+    }
     virtual void Execute()
     {
         filter->SetInput(input);
