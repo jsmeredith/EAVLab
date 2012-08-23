@@ -167,6 +167,7 @@ struct Pipeline
         }
 
         result = ds;
+        //result->PrintSummary(cout);
     }
 };
 

@@ -30,6 +30,7 @@ EL3DWindow::EL3DWindow(ELWindowManager *parent)
     ///\todo: hack: assuming 4 pipelines
     currentPipeline = 0;
     watchedPipelines.resize(NUMPIPES+1, false);
+    colortexId = 0;
     for (int i=0; i<NUMPIPES; i++)
     {
         Plot p;
@@ -404,6 +405,7 @@ EL3DWindow::paintGL()
             // a different one for coloring; this currently results
             // in an error; we'll just ignore it.
             cerr << e.GetErrorText() << endl;
+            cerr << "-\n";
         }
     }
 

@@ -88,12 +88,18 @@ class IsosurfaceOperation : public Operation
     virtual std::vector<std::string> GetOutputVariables()
     {
         std::vector<std::string> vars;
-        vars.push_back("revInputIndex");
-        vars.push_back("revInputSubindex");
-        vars.push_back("alpha");
-        vars.push_back("newx");
-        vars.push_back("newy");
-        vars.push_back("newz");
+        if (false)
+        {
+            // these were mostly internal debug fields from
+            // the isosurface; we stopped exposing them for
+            // now but might want them for debug again later
+            vars.push_back("revInputIndex");
+            vars.push_back("revInputSubindex");
+            vars.push_back("alpha");
+            vars.push_back("newx");
+            vars.push_back("newy");
+            vars.push_back("newz");
+        }
         return vars;
     }
     virtual void Execute()
