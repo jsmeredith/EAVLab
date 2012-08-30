@@ -44,8 +44,8 @@ INCLUDEPATH += $$EAVLROOT/config $$EAVLROOT/src/common $$EAVLROOT/src/importers 
 
 win32 {
   INCLUDEPATH += $$EAVLROOT/config-windows
-  LIBS += -L$$EAVLROOT/Debug/lib -leavl
-  POST_TARGETDEPS += $$EAVLROOT/Debug/lib/libeavl.a
+  LIBS += -L$$EAVLROOT/Debug/lib -L../eavl-build-desktop/debug/lib -leavl
+  #POST_TARGETDEPS += $$EAVLROOT/Debug/lib/libeavl.a
 }
 unix {
   LIBS += -L$$EAVLROOT/lib -leavl
