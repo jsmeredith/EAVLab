@@ -384,7 +384,7 @@ EL3DWindow::paintGL()
                 else if (cs->GetDimensionality() == 2)
                 {
                     eavlField *normals = NULL;
-                    for (unsigned int i=0; i<p.data->GetNumFields(); i++)
+                    for (int i=0; i<p.data->GetNumFields(); i++)
                     {
                         if (p.data->GetField(i)->GetArray()->GetName() == "surface_normals" &&
                             p.data->GetField(i)->GetAssociation() == eavlField::ASSOC_CELL_SET &&
@@ -687,7 +687,7 @@ EL3DWindow::SettingsVarChanged(const QString &var)
     plots[0].pcRenderer = NULL;
     if (p.data)
     {
-        for (unsigned int i=0; i<p.data->GetNumFields(); i++)
+        for (int i=0; i<p.data->GetNumFields(); i++)
         {
             ///\todo: we're taking the *last* field with this name,
             /// the theory being that e.g. if someone adds an extface

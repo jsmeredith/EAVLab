@@ -152,6 +152,10 @@ struct Pipeline
         // read the mesh and vars
         ///\todo: only reading chunk 0 for now
         eavlDataSet *ds = source->source_file->GetMesh(source->mesh, 0);
+
+        // \todo: hack: create a new data set structure so our mutators
+        // don't quite so easily mess with the one in the importer.
+        ds = ds->CreateShallowCopy();
         for (size_t i=0; i<vars.size(); i++)
         {
             eavlField *f = source->source_file->GetField(vars[i], source->mesh, 0);
