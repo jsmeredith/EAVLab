@@ -106,7 +106,7 @@ class IsosurfaceOperation : public Operation
     {
         filter->SetInput(input);
         ///\todo: assuming cell set 0
-        filter->SetCellSet(input->cellsets[0]->GetName());
+        filter->SetCellSet(input->GetCellSet(0)->GetName());
         filter->SetField(atts->field);
         filter->SetIsoValue(atts->value);
         filter->Execute();

@@ -152,8 +152,8 @@ EL3DWindow::ResetView()
         if (!p.data)
             continue;
 
-        int npts = p.data->npoints;
-        int dim = p.data->coordinateSystems[0]->GetDimension();
+        int npts = p.data->GetNumPoints();
+        int dim = p.data->GetCoordinateSystem(0)->GetDimension();
 
         //CHIMERA HACK
         if (dim > 3)
@@ -357,7 +357,7 @@ EL3DWindow::paintGL()
         {
             p.pcRenderer = new eavlPseudocolorRenderer(p.data, 
                                                        p.colortable,
-                                                       p.data->fields[p.variable_fieldindex]->GetArray()->GetName());
+                                                       p.data->GetField(p.variable_fieldindex)->GetArray()->GetName());
         }
         if (!p.meshRenderer)
         {
@@ -375,7 +375,7 @@ EL3DWindow::paintGL()
             }
             else
             {
-                eavlCellSet *cs = p.data->cellsets[p.cellset_index];
+                eavlCellSet *cs = p.data->GetCellSet(p.cellset_index);
                 if (cs->GetDimensionality() == 1)
                 {
                     if (p.pcRenderer)          p.pcRenderer->RenderCells1D(cs);
@@ -384,13 +384,13 @@ EL3DWindow::paintGL()
                 else if (cs->GetDimensionality() == 2)
                 {
                     eavlField *normals = NULL;
-                    for (unsigned int i=0; i<p.data->fields.size(); i++)
+                    for (unsigned int i=0; i<p.data->GetNumFields(); i++)
                     {
-                        if (p.data->fields[i]->GetArray()->GetName() == "surface_normals" &&
-                            p.data->fields[i]->GetAssociation() == eavlField::ASSOC_CELL_SET &&
-                            p.data->fields[i]->GetAssocCellSet() == p.cellset_index)
+                        if (p.data->GetField(i)->GetArray()->GetName() == "surface_normals" &&
+                            p.data->GetField(i)->GetAssociation() == eavlField::ASSOC_CELL_SET &&
+                            p.data->GetField(i)->GetAssocCellSet() == p.cellset_index)
                         {
-                            normals = p.data->fields[i];
+                            normals = p.data->GetField(i);
                         }
                     }
 
@@ -687,23 +687,23 @@ EL3DWindow::SettingsVarChanged(const QString &var)
     plots[0].pcRenderer = NULL;
     if (p.data)
     {
-        for (unsigned int i=0; i<p.data->fields.size(); i++)
+        for (unsigned int i=0; i<p.data->GetNumFields(); i++)
         {
             ///\todo: we're taking the *last* field with this name,
             /// the theory being that e.g. if someone adds an extface
             /// operator, it uses the same variable name with a new
             /// cell set later in the lst.  so we want the last cell set.
             /// this is a bit hack-ish.
-            if (p.data->fields[i]->GetArray()->GetName() == var.toStdString())
+            if (p.data->GetField(i)->GetArray()->GetName() == var.toStdString())
             {
                 p.variable_fieldindex = i;
-                if (p.data->fields[i]->GetAssociation() == eavlField::ASSOC_CELL_SET)
+                if (p.data->GetField(i)->GetAssociation() == eavlField::ASSOC_CELL_SET)
                 {
-                    p.cellset_index = p.data->fields[i]->GetAssocCellSet();
+                    p.cellset_index = p.data->GetField(i)->GetAssocCellSet();
                 }
                 else
                 {
-                    p.cellset_index = p.data->cellsets.size()-1;
+                    p.cellset_index = p.data->GetNumCellSets()-1;
                 }
                 // don't put a break; here. see above
             }

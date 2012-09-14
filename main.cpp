@@ -17,7 +17,7 @@ int main(int argc, char *argv[])
         ELMainWindow w;
         
         // want a bigger font? hardcode it here
-        if (false)
+        if (true)
         {
             QFont f = w.font();
             f.setPixelSize(20);

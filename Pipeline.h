@@ -155,7 +155,7 @@ struct Pipeline
         for (size_t i=0; i<vars.size(); i++)
         {
             eavlField *f = source->source_file->GetField(vars[i], source->mesh, 0);
-            ds->fields.push_back(f);
+            ds->AddField(f);
         }
 
         // execute each operation

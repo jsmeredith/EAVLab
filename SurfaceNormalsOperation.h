@@ -45,7 +45,7 @@ class SurfaceNormalsOperation : public Operation
     {
         mutator->SetDataSet(input);
         ///\todo: assuming last cell set
-        mutator->SetCellSet(input->cellsets[input->cellsets.size()-1]->GetName());
+        mutator->SetCellSet(input->GetCellSet(input->GetNumCellSets()-1)->GetName());
         mutator->Execute();
         output = input;
     }
