@@ -15,18 +15,18 @@ int main(int argc, char *argv[])
         QApplication a(argc, argv);
 
         ELMainWindow w;
-        
+
         // want a bigger font? hardcode it here
-        if (true)
+        if (argc == 3)
         {
             QFont f = w.font();
-            f.setPixelSize(20);
+            f.setPixelSize(atoi(argv[2]));
             w.setFont(f);
         }
 
         if (argc == 1)
             ;// do nothing
-        else if (argc == 2)
+        else if (argc >= 2)
             w.OpenFile(argv[1]);
         else
             cerr << "Error: unexpected extra arguments\n";
