@@ -87,6 +87,11 @@ SYS = $$system(uname -s)
   LIBS += $$SZIP_LDFLAGS $$SZIP_LIBS
 }
 
+!equals(ZLIB, no) {
+  INCLUDEPATH += $$ZLIB/include
+  LIBS += $$ZLIB_LDFLAGS $$ZLIB_LIBS
+}
+
 
 
 ##
