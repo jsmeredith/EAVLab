@@ -43,11 +43,12 @@ DEPENDPATH += $$EAVLROOT/config $$EAVLROOT/src/common $$EAVLROOT/src/importers $
 INCLUDEPATH += $$EAVLROOT/config $$EAVLROOT/src/common $$EAVLROOT/src/importers $$EAVLROOT/src/filters $$EAVLROOT/src/exporters $$EAVLROOT/src/math $$EAVLROOT/src/rendering
 
 win32 {
-  INCLUDEPATH += $$EAVLROOT/config-windows
+  INCLUDEPATH += $$EAVLROOT/config-simple
   LIBS += -L$$EAVLROOT/Debug/lib -L$$EAVLROOT/../eavl-build-desktop/debug/lib -leavl
   #POST_TARGETDEPS += $$EAVLROOT/Debug/lib/libeavl.a
 }
 unix {
+  ##INCLUDEPATH += $$EAVLROOT/config-simple
   LIBS += -L$$EAVLROOT/lib -leavl
   POST_TARGETDEPS += $$EAVLROOT/lib/libeavl.a
 }
