@@ -9,12 +9,18 @@
 class TransformAttributes : public Attribute
 {
   public:
-    float sx, sy, sz; // for now.
-    float tx, ty, tz; // for now..
+    bool  transformCoordinates;
+    int   csIndex;
+    float rx, ry, rz;
+    float sx, sy, sz;
+    float tx, ty, tz;
   public:
     virtual const char *GetType() {return "TransformAttributes";}
     TransformAttributes() : Attribute()
     {
+        transformCoordinates = false;
+        csIndex = 0;
+        rx = ry = rz = 0.;
         sx = sy = sz = 1.;
         tx = ty = tz = 0.; 
     }
@@ -23,6 +29,12 @@ class TransformAttributes : public Attribute
     }
     virtual void AddFields()
     {
+        Add("Transform Coordinate Data", transformCoordinates);
+        Add("Coordinate System Index", csIndex);
+
+        Add("rx", rx);
+        Add("ry", ry);
+        Add("rz", rz);
         Add("sx", sx);
         Add("sy", sy);
         Add("sz", sz);
@@ -50,7 +62,6 @@ class TransformOperation : public Operation
     TransformAttributes  *atts;
     eavlTransformMutator *mutator;
   public:
-  //  Is
     TransformOperation()
         : Operation()
     {
@@ -64,12 +75,18 @@ class TransformOperation : public Operation
     virtual std::string GetOperationInfo()
     {
         ostringstream os;
-        os << "sx=" << atts->sx << endl;
-        os << "sy=" << atts->sy << endl;
-        os << "sz=" << atts->sz << endl;
-        os << "tx=" << atts->tx << endl;
-        os << "ty=" << atts->ty << endl;
-        os << "tz=" << atts->tz << endl;
+        os << "Rotate" << endl
+           << "   x=" << atts->rx << endl
+           << "   y=" << atts->ry << endl
+           << "   z=" << atts->rz << endl;
+        os << "Scale" << endl
+           << "   x=" << atts->sx << endl
+           << "   y=" << atts->sy << endl
+           << "   z=" << atts->sz << endl;
+        os << "Translate" << endl
+           << "   x=" << atts->tx << endl
+           << "   y=" << atts->ty << endl
+           << "   z=" << atts->tz;
         return os.str();        
     }
     virtual Attribute *GetSettings()
@@ -80,6 +97,9 @@ class TransformOperation : public Operation
     virtual void Execute()
     {
         mutator->SetDataSet(input);
+ 
+        mutator->SetCoordinateSystemIndex(atts->csIndex);
+        mutator->SetTransformCoordinates(atts->transformCoordinates);
 
         // Build up transform from different components. Do more here, add rotation, etc.
         eavlMatrix4x4 M;
@@ -89,10 +109,15 @@ class TransformOperation : public Operation
         M(3,0) = atts->tx;
         M(3,1) = atts->ty;
         M(3,2) = atts->tz;
+
+        eavlMatrix4x4 rx,ry,rz;
+        rx.CreateRotateX(atts->rx * (3.141592653589793 / 180.));
+        ry.CreateRotateY(atts->ry * (3.141592653589793 / 180.));
+        rz.CreateRotateZ(atts->rz * (3.141592653589793 / 180.));
+
+        M = rx * ry * rz * M;
         mutator->SetTransform(M);
 
-        ///\todo: assuming last cell set
- //       mutator->SetCellSet(input->GetCellSet(input->GetNumCellSets()-1)->GetName());
         mutator->Execute();
         output = input;
     }
