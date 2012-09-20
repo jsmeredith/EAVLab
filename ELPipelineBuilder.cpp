@@ -20,6 +20,7 @@
 #include "ExternalFaceOperation.h"
 #include "IsosurfaceOperation.h"
 #include "SurfaceNormalsOperation.h"
+#include "TransformOperation.h"
 
 // ****************************************************************************
 // Constructor:  ELPipelineBuilder::ELPipelineBuilder
@@ -74,6 +75,7 @@ ELPipelineBuilder::ELPipelineBuilder(QWidget *parent)
         "Isosurface",
         "ExternalFace",
         "SurfaceNormals",
+        "Transform",
         NULL
     };
     for (int i=0; operations[i] != NULL; i++)
@@ -233,6 +235,8 @@ ELPipelineBuilder::newOperation()
         pipeline->ops.push_back(new ExternalFaceOperation);
     else if (actionname == "SurfaceNormals")
         pipeline->ops.push_back(new SurfaceNormalsOperation);
+    else if (actionname == "Transform")
+        pipeline->ops.push_back(new TransformOperation);
     else
         throw "Unexpected operation";
 
