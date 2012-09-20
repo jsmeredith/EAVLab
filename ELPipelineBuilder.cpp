@@ -89,8 +89,17 @@ ELPipelineBuilder::ELPipelineBuilder(QWidget *parent)
     //
     // add execute button (probably not the best place for it)
     //
+    QPushButton *deleteOpButton = new QPushButton("Delete Operation", pipelineGroup);
+    pipelineLayout->addWidget(deleteOpButton, 2, 0);
+    connect(deleteOpButton, SIGNAL(clicked()),
+            this, SLOT(deleteCurrentOp()));
+
+
+    //
+    // add execute button (probably not the best place for it)
+    //
     QPushButton *executeButton = new QPushButton("Execute", pipelineGroup);
-    pipelineLayout->addWidget(executeButton, 2, 0);
+    pipelineLayout->addWidget(executeButton, 3, 0);
     connect(executeButton, SIGNAL(clicked()),
             this, SLOT(executePipeline()));
 
@@ -428,4 +437,37 @@ ELPipelineBuilder::operatorUpdated(Attribute *settings)
     QTreeWidgetItem *item = tree->topLevelItem(rowindex);
     item->setText(0, op->GetOperationName().c_str());
     item->setText(1, op->GetOperationInfo().c_str());
+}
+
+
+void
+ELPipelineBuilder::deleteCurrentOp()
+{
+    if (currentPipeline < 0 || currentPipeline >= (int)Pipeline::allPipelines.size())
+        return;
+
+    Pipeline *pipeline = Pipeline::allPipelines[currentPipeline];
+
+    QList<QTreeWidgetItem*> s = tree->selectedItems();
+    int n = s.size();
+    if (n == 0)
+    {
+        return;
+    }
+    else if (n > 1)
+    {
+        cerr << "ERROR: more than one item selected\n";
+    }
+    else
+    {
+        QTreeWidgetItem *item = s[0];
+        int rowindex = tree->indexOfTopLevelItem(item);
+        if (rowindex == 0)
+            return;
+        int opindex = rowindex - 1;
+        for (int i = opindex; i < pipeline->ops.size()-1; ++i)
+            pipeline->ops[i] = pipeline->ops[i+1];
+        pipeline->ops.resize(pipeline->ops.size()-1);
+        rebuildPipelineDisplay();
+    }
 }
