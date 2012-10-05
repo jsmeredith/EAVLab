@@ -55,10 +55,19 @@ class EL3DWindowSettings : public QWidget
     }
     void UpdateFromPipeline(Pipeline *p)
     {
+        QString oldvar = varCombo->currentText();
+        int newindex = -1;
         varCombo->clear();
         vector<string> vars = p->GetVariables();
         for (size_t i = 0; i < vars.size(); i++)
+        {
             varCombo->addItem(vars[i].c_str());
+            if (oldvar == vars[i].c_str())
+                newindex = i;
+        }
+        if (newindex >= 0)
+            varCombo->setCurrentIndex(newindex);
+        emit VarChanged(varCombo->currentText());
     }
   signals:
     void ColorTableChanged(const QString &);

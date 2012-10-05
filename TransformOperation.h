@@ -75,18 +75,88 @@ class TransformOperation : public Operation
     virtual std::string GetOperationInfo()
     {
         ostringstream os;
-        os << "Rotate" << endl
-           << "   x=" << atts->rx << endl
-           << "   y=" << atts->ry << endl
-           << "   z=" << atts->rz << endl;
-        os << "Scale" << endl
-           << "   x=" << atts->sx << endl
-           << "   y=" << atts->sy << endl
-           << "   z=" << atts->sz << endl;
-        os << "Translate" << endl
-           << "   x=" << atts->tx << endl
-           << "   y=" << atts->ty << endl
-           << "   z=" << atts->tz;
+        bool rotating    = atts->rx != 0 || atts->ry != 0 || atts->rz != 0;
+        bool scaling     = atts->sx != 1 || atts->sy != 1 || atts->sz != 1;
+        bool translating = atts->tx != 0 || atts->ty != 0 || atts->tz != 0;
+
+        if (!rotating && !scaling && !translating)
+        {
+            os << "none";
+        }
+        if ((rotating?1:0) + (scaling?1:0) + (translating?1:0) > 1)
+        {
+            if (rotating)
+            {
+                float ident = 0;
+                os << "Rotate(";
+                if (atts->rx!=ident) os << "x";
+                if (atts->ry!=ident) os << "y";
+                if (atts->rz!=ident) os << "z";
+                os << "),";
+            }
+            if (scaling)
+            {
+                float ident = 1;
+                os << "Scale(";
+                if (atts->sx!=ident) os << "x";
+                if (atts->sy!=ident) os << "y";
+                if (atts->sz!=ident) os << "z";
+                os << ")";
+                if (translating)
+                    os << ",";
+            }
+            if (translating)
+            {
+                float ident = 0;
+                os << "Translate(";
+                if (atts->tx!=ident) os << "x";
+                if (atts->ty!=ident) os << "y";
+                if (atts->tz!=ident) os << "z";
+                os << ")";
+            }
+        }
+        else if (rotating)
+        {
+            float ident = 0;
+            os << "Rotate(";
+            if (atts->ry==ident && atts->rz==ident)
+                os << "x="<<atts->rx;
+            else if (atts->rx==ident && atts->rz==ident)
+                os << "y="<<atts->ry;
+            else if (atts->rx==ident && atts->ry==ident)
+                os << "z="<<atts->rz;
+            else
+                os << atts->rx<<","<<atts->ry<<","<<atts->rz;
+            os << ")";
+        }
+        else if (scaling)
+        {
+            float ident = 1;
+            os << "Scale(";
+            if (atts->sy==ident && atts->sz==ident)
+                os << "x="<<atts->sx;
+            else if (atts->sx==ident && atts->sz==ident)
+                os << "y="<<atts->sy;
+            else if (atts->sx==ident && atts->sy==ident)
+                os << "z="<<atts->sz;
+            else
+                os << atts->sx<<","<<atts->sy<<","<<atts->sz;
+            os << ")";
+        }
+        else if (translating)
+        {
+            float ident = 0;
+            os << "Translate(";
+            if (atts->ty==ident && atts->tz==ident)
+                os << "x="<<atts->tx;
+            else if (atts->tx==ident && atts->tz==ident)
+                os << "y="<<atts->ty;
+            else if (atts->tx==ident && atts->ty==ident)
+                os << "z="<<atts->tz;
+            else
+                os << atts->tx<<","<<atts->ty<<","<<atts->tz;
+            os << ")";
+        }
         return os.str();        
     }
     virtual Attribute *GetSettings()
