@@ -220,6 +220,9 @@ EL3DWindow::ResetView()
 // Creation:    August 16, 2012
 //
 // Modifications:
+//   Jeremy Meredith, Thu Nov 29 12:19:33 EST 2012
+//   Added nodal surface normal lighting support.
+//
 // ****************************************************************************
 void
 EL3DWindow::paintGL()
@@ -384,11 +387,21 @@ EL3DWindow::paintGL()
                 else if (cs->GetDimensionality() == 2)
                 {
                     eavlField *normals = NULL;
+                    // look for face-centered surface normals first
                     for (int i=0; i<p.data->GetNumFields(); i++)
                     {
                         if (p.data->GetField(i)->GetArray()->GetName() == "surface_normals" &&
                             p.data->GetField(i)->GetAssociation() == eavlField::ASSOC_CELL_SET &&
                             p.data->GetField(i)->GetAssocCellSet() == p.cellset_index)
+                        {
+                            normals = p.data->GetField(i);
+                        }
+                    }
+                    // override with node-centered ones if we have them
+                    for (int i=0; i<p.data->GetNumFields(); i++)
+                    {
+                        if (p.data->GetField(i)->GetArray()->GetName() == "nodecentered_surface_normals" &&
+                            p.data->GetField(i)->GetAssociation() == eavlField::ASSOC_POINTS)
                         {
                             normals = p.data->GetField(i);
                         }
@@ -677,6 +690,9 @@ EL3DWindow::SettingsColorTableChanged(const QString &ct)
 // Creation:    August 20, 2012
 //
 // Modifications:
+//   Jeremy Meredith, Thu Nov 29 12:19:56 EST 2012
+//   Try to keep the same cell set selected after an update.
+//
 // ****************************************************************************
 void
 EL3DWindow::SettingsVarChanged(const QString &var)
@@ -684,7 +700,9 @@ EL3DWindow::SettingsVarChanged(const QString &var)
     ///\todo: just prototyping; only affect plot 0
     Plot &p = plots[0];
     delete p.pcRenderer;
-    plots[0].pcRenderer = NULL;
+    p.pcRenderer = NULL;
+    p.variable_fieldindex = -1;
+    p.cellset_index = -1;
     if (p.data)
     {
         for (int i=0; i<p.data->GetNumFields(); i++)
@@ -708,6 +726,17 @@ EL3DWindow::SettingsVarChanged(const QString &var)
                 // don't put a break; here. see above
             }
         }
-        updateGL();
+        if (p.cellset_index == -1)
+        {
+            for (int i=0; i<p.data->GetNumCellSets(); i++)
+            {
+                if (p.data->GetCellSet(i)->GetName() == var.toStdString())
+                {
+                    p.cellset_index = i;
+                    break;
+                }
+            }
+        }
     }
+    updateGL();
 }

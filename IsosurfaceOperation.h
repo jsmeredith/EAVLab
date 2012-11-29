@@ -57,7 +57,6 @@ class IsosurfaceOperation : public Operation
     IsosurfaceAttributes *atts;
     eavlIsosurfaceFilter *filter;
   public:
-  //  Is
     IsosurfaceOperation()
         : Operation()
     {

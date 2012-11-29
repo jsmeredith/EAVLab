@@ -107,6 +107,7 @@ struct Pipeline
             throw eavlException("no source file selected");
 
         vector<string> vars;
+        vars.push_back("points");
         vars.push_back(source->mesh);
 
         vector<string> sourcevars = source->source_file->GetFieldList(source->mesh);
