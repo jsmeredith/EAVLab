@@ -108,7 +108,9 @@ struct Pipeline
 
         vector<string> vars;
         vars.push_back("points");
-        vars.push_back(source->mesh);
+
+        vector<string> cellsets = source->source_file->GetCellSetList(source->mesh);
+        vars.insert(vars.end(), cellsets.begin(), cellsets.end());
 
         vector<string> sourcevars = source->source_file->GetFieldList(source->mesh);
         vars.insert(vars.end(), sourcevars.begin(), sourcevars.end());
