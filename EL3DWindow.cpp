@@ -2,6 +2,9 @@
 #include "EL3DWindow.h"
 
 #include <QMouseEvent>
+#include <QToolBar>
+#include <QAction>
+#include <QActionGroup>
 
 #include <eavlColorTable.h>
 #include <eavlRenderer.h>
@@ -27,13 +30,14 @@ EL3DWindow::EL3DWindow(ELWindowManager *parent)
     showghosts = false;
     showmesh = false;
 
+    window = new eavl3DOpenGLWindow;
+
     ///\todo: hack: assuming 4 pipelines
     currentPipeline = 0;
     watchedPipelines.resize(NUMPIPES+1, false);
-    colortexId = 0;
     for (int i=0; i<NUMPIPES; i++)
     {
-        Plot p;
+        eavlPlot p;
         p.data = NULL;
         p.colortable = "dense";
         p.variable_fieldindex = -1;
@@ -62,7 +66,7 @@ EL3DWindow::EL3DWindow(ELWindowManager *parent)
 void
 EL3DWindow::PipelineUpdated(int index, Pipeline *pipe)
 {
-    Plot &p = plots[index];
+    eavlPlot &p = plots[index];
 
     p.variable_fieldindex = -1;
     p.cellset_index = -1;
@@ -124,6 +128,7 @@ void
 EL3DWindow::initializeGL()
 {
     makeCurrent();
+    window->Initialize();
 }
 
 // ****************************************************************************
@@ -143,66 +148,7 @@ EL3DWindow::initializeGL()
 void
 EL3DWindow::ResetView()
 {
-    dmin[0] = dmin[1] = dmin[2] = FLT_MAX;
-    dmax[0] = dmax[1] = dmax[2] = -FLT_MAX;
-
-    for (unsigned int i=0; i<plots.size(); i++)
-    {
-        Plot &p = plots[i];
-        if (!p.data)
-            continue;
-
-        int npts = p.data->GetNumPoints();
-        int dim = p.data->GetCoordinateSystem(0)->GetDimension();
-
-        //CHIMERA HACK
-        if (dim > 3)
-            dim = 3;
-    
-        if (dim < 2 || dim > 3)
-            THROW(eavlException,"only supports 2 or 3 dimensions for now");
-        for (int d=0; d<dim; d++)
-        {
-            for (int i=0; i<npts; i++)
-            {
-                double v = p.data->GetPoint(i,d);
-                //cerr << "findspatialextents: d="<<d<<" i="<<i<<"  v="<<v<<endl;
-                if (v < dmin[d])
-                    dmin[d] = v;
-                if (v > dmax[d])
-                    dmax[d] = v;
-            }
-        }
-    }
-
-    // untouched dims force to zero
-    if (dmin[0] > dmax[0])
-        dmin[0] = dmax[0] = 0;
-    if (dmin[1] > dmax[1])
-        dmin[1] = dmax[1] = 0;
-    if (dmin[2] > dmax[2])
-        dmin[2] = dmax[2] = 0;
-
-    //cerr << "extents: "
-    //     << dmin[0]<<":"<<dmax[0]<<"  "
-    //     << dmin[1]<<":"<<dmax[1]<<"  "
-    //     << dmin[2]<<":"<<dmax[2]<<"\n";
-
-    ds_size = sqrt( (dmax[0]-dmin[0])*(dmax[0]-dmin[0]) +
-                    (dmax[1]-dmin[1])*(dmax[1]-dmin[1]) +
-                    (dmax[2]-dmin[2])*(dmax[2]-dmin[2]) );
-                    
-    center = eavlPoint3((dmax[0]+dmin[0]) / 2,
-                        (dmax[1]+dmin[1]) / 2,
-                        (dmax[2]+dmin[2]) / 2);
-
-    camera.at   = center;
-    camera.from = camera.at + eavlVector3(0,0, -ds_size*2);
-    camera.up   = eavlVector3(0,1,0);
-    camera.fov  = 0.5;
-    camera.nearplane = ds_size/16.;
-    camera.farplane = ds_size*4;
-
+    window->ResetView();
     updateGL();
 }
 
@@ -227,121 +173,7 @@ EL3DWindow::ResetView()
 void
 EL3DWindow::paintGL()
 {
-    makeCurrent();
-
-    glClearColor(0.0, 0.2, 0.3, 1.0);
-    glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-
-    // set up matrices
-    glMatrixMode( GL_PROJECTION );
-    glLoadIdentity();
-    glOrtho(-1,1, -1,1, -1,1);
-
-    glMatrixMode( GL_MODELVIEW );
-    glLoadIdentity();
-
-    // create a color table
-    ///\todo: we're only showing first-plot color table
-    eavlColorTable ct(plots[0].colortable);
-    if (plots[0].colortable != saved_colortable)
-    {
-        if (colortexId == 0)
-        {
-            glGenTextures(1, (GLuint*)&colortexId);
-        }
-
-        glBindTexture(GL_TEXTURE_1D, colortexId);
-        // note: 2048 was NOT supported on Jeremy's Intel IGP laptop
-        //       but 1024 IS.  Real NVIDIA cards can go up to 8192.
-        const int n = 1024;
-        float colors[n*3];
-        for (int i=0; i<n; i++)
-        {
-            eavlColor c = ct.Map(float(i)/float(n-1));
-            colors[3*i+0] = c.c[0];
-            colors[3*i+1] = c.c[1];
-            colors[3*i+2] = c.c[2];
-        }
-        glTexImage1D(GL_TEXTURE_1D, 0,
-                     GL_RGB,
-                     n,
-                     0,
-                     GL_RGB,
-                     GL_FLOAT,
-                     colors);
-
-        saved_colortable = plots[0].colortable;
-    }
-
-    // draw the color table across a big 3d rectangle
-    //glDisable(GL_DEPTH_TEST);
-    glDisable(GL_LIGHTING);
-
-    glEnable(GL_TEXTURE_1D);
-    glTexParameterf(GL_TEXTURE_1D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-    glTexParameterf(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-    //glTexParameterf(GL_TEXTURE_1D, GL_TEXTURE_WRAP_R, GL_CLAMP); // R is the 3rd coord (not alphabetical)
-
-    if (ct.smooth)
-    {
-        glTexParameterf(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameterf(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    }
-    else
-    {
-        glTexParameterf(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glTexParameterf(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    }
-    glBindTexture(GL_TEXTURE_1D, colortexId); 
-    glColor3fv(eavlColor::white.c);
-    glBegin(GL_QUADS);
-    glTexCoord1f(0);
-    glVertex3f(-.9, .87 ,.99);
-    glVertex3f(-.9, .95 ,.99);
-    glTexCoord1f(1);
-    glVertex3f(+.9, .95 ,.99);
-    glVertex3f(+.9, .87 ,.99);
-    glEnd();
-
-    int plotcount = 0;
-    for (unsigned int i=0; i<plots.size(); i++)
-        plotcount += (plots[i].data) ? 1 : 0;
-    if (plotcount == 0)
-        return;
-
-    // matrices
-    glMatrixMode( GL_PROJECTION );
-    glLoadIdentity();
-    camera.UpdateProjectionMatrix();
-    glMultMatrixf(camera.P.GetOpenGLMatrix4x4());
-
-    glMatrixMode( GL_MODELVIEW );
-    glLoadIdentity();
-
-    // lighting
-    bool lighting = true;
-    if (lighting)
-    {
-        bool twoSidedLighting = true;
-        glShadeModel(GL_SMOOTH);
-        glEnable(GL_LIGHTING);
-        glEnable(GL_COLOR_MATERIAL);
-        glEnable(GL_LIGHT0);
-        glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, twoSidedLighting?1:0);
-        glLightModelfv(GL_LIGHT_MODEL_AMBIENT, eavlColor::grey20.c);
-        glLightfv(GL_LIGHT0, GL_AMBIENT, eavlColor::black.c);
-        glLightfv(GL_LIGHT0, GL_DIFFUSE, eavlColor::grey50.c);
-        float lightdir[4] = {0, 0, 1, 0};
-        glLightfv(GL_LIGHT0, GL_POSITION, lightdir);
-        glLightfv(GL_LIGHT0, GL_SPECULAR, eavlColor::white.c);
-        glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, eavlColor::grey40.c);
-        glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 8.0f);
-    }
-
-    camera.UpdateViewMatrix();
-    glMultMatrixf(camera.V.GetOpenGLMatrix4x4());
-
-    // render the plots
+    window->plots.clear();
     for (unsigned int i=0;  i<plots.size(); i++)
     {
         bool watchingCurrent = watchedPipelines[0];
@@ -352,7 +184,7 @@ EL3DWindow::paintGL()
             !watchingThis)
             continue;
 
-        Plot &p = plots[i];
+        eavlPlot &p = plots[i];
         if (!p.data)
             continue;
 
@@ -368,83 +200,12 @@ EL3DWindow::paintGL()
                                                          eavlColor::white);
         }
 
-
-        try
-        {
-            if (p.cellset_index < 0)
-            {
-                if (p.pcRenderer)          p.pcRenderer->RenderPoints();
-                else if (p.meshRenderer)   p.meshRenderer->RenderPoints();
-            }
-            else
-            {
-                eavlCellSet *cs = p.data->GetCellSet(p.cellset_index);
-                if (cs->GetDimensionality() == 1)
-                {
-                    if (p.pcRenderer)          p.pcRenderer->RenderCells1D(cs);
-                    else if (p.meshRenderer)   p.meshRenderer->RenderCells1D(cs);
-                }
-                else if (cs->GetDimensionality() == 2)
-                {
-                    eavlField *normals = NULL;
-                    // look for face-centered surface normals first
-                    for (int i=0; i<p.data->GetNumFields(); i++)
-                    {
-                        if (p.data->GetField(i)->GetArray()->GetName() == "surface_normals" &&
-                            p.data->GetField(i)->GetAssociation() == eavlField::ASSOC_CELL_SET &&
-                            p.data->GetField(i)->GetAssocCellSet() == p.cellset_index)
-                        {
-                            normals = p.data->GetField(i);
-                        }
-                    }
-                    // override with node-centered ones if we have them
-                    for (int i=0; i<p.data->GetNumFields(); i++)
-                    {
-                        if (p.data->GetField(i)->GetArray()->GetName() == "nodecentered_surface_normals" &&
-                            p.data->GetField(i)->GetAssociation() == eavlField::ASSOC_POINTS)
-                        {
-                            normals = p.data->GetField(i);
-                        }
-                    }
-
-                    if (p.pcRenderer)          p.pcRenderer->RenderCells2D(cs, normals);
-                    else if (p.meshRenderer)   p.meshRenderer->RenderCells2D(cs, normals);
-                }
-            }
-        }
-        catch (const eavlException &e)
-        {
-            // The user can specify one cell for geometry and
-            // a different one for coloring; this currently results
-            // in an error; we'll just ignore it.
-            cerr << e.GetErrorText() << endl;
-            cerr << "-\n";
-        }
+        window->plots.push_back(p);
     }
 
-    // bounding box
-    glDisable(GL_TEXTURE_1D);
-    glDisable(GL_LIGHTING);
-    glLineWidth(1);
-    glColor3f(.6,.6,.6);
-    glBegin(GL_LINES);
-    glVertex3d(dmin[0],dmin[1],dmin[2]); glVertex3d(dmin[0],dmin[1],dmax[2]);
-    glVertex3d(dmin[0],dmax[1],dmin[2]); glVertex3d(dmin[0],dmax[1],dmax[2]);
-    glVertex3d(dmax[0],dmin[1],dmin[2]); glVertex3d(dmax[0],dmin[1],dmax[2]);
-    glVertex3d(dmax[0],dmax[1],dmin[2]); glVertex3d(dmax[0],dmax[1],dmax[2]);
 
-    glVertex3d(dmin[0],dmin[1],dmin[2]); glVertex3d(dmin[0],dmax[1],dmin[2]);
-    glVertex3d(dmin[0],dmin[1],dmax[2]); glVertex3d(dmin[0],dmax[1],dmax[2]);
-    glVertex3d(dmax[0],dmin[1],dmin[2]); glVertex3d(dmax[0],dmax[1],dmin[2]);
-    glVertex3d(dmax[0],dmin[1],dmax[2]); glVertex3d(dmax[0],dmax[1],dmax[2]);
-
-    glVertex3d(dmin[0],dmin[1],dmin[2]); glVertex3d(dmax[0],dmin[1],dmin[2]);
-    glVertex3d(dmin[0],dmin[1],dmax[2]); glVertex3d(dmax[0],dmin[1],dmax[2]);
-    glVertex3d(dmin[0],dmax[1],dmin[2]); glVertex3d(dmax[0],dmax[1],dmin[2]);
-    glVertex3d(dmin[0],dmax[1],dmax[2]); glVertex3d(dmax[0],dmax[1],dmax[2]);
-    glEnd();
-
-    //delete[] pts;
+    makeCurrent();
+    window->Paint();
 }
 
 // ****************************************************************************
@@ -466,9 +227,7 @@ void
 EL3DWindow::resizeGL(int w, int h)
 {
     makeCurrent();
-    glViewport(0, 0, w, h);
-
-    camera.aspect = float(w)/float(h);
+    window->Resize(w,h);
 }
 
 // ****************************************************************************
@@ -521,6 +280,7 @@ EL3DWindow::mouseMoveEvent(QMouseEvent *mev)
 
     if (mousedown)
     {
+        eavlCamera &camera = window->camera;
         float x1 =  ((float(lastx*2)/float(width()))  - 1.0);
         float y1 = -((float(lasty*2)/float(height())) - 1.0);
         float x2 =  ((float(  x  *2)/float(width()))  - 1.0);
@@ -544,9 +304,9 @@ EL3DWindow::mouseMoveEvent(QMouseEvent *mev)
                 eavlMatrix4x4 R1;
                 R1.CreateTrackball(-x1,-y1, -x2,-y2);
                 eavlMatrix4x4 T1;
-                T1.CreateTranslate(-center);
+                T1.CreateTranslate(-camera.at);
                 eavlMatrix4x4 T2;
-                T2.CreateTranslate(center);
+                T2.CreateTranslate(camera.at);
                 
                 eavlMatrix4x4 V1(camera.V);
                 V1.m[0][3]=0;
@@ -564,9 +324,12 @@ EL3DWindow::mouseMoveEvent(QMouseEvent *mev)
         }
         else if (mev->buttons() & Qt::MidButton)
         {
+            ///\todo: disabled zoom for now; bad way to do this...
+            /*
             eavlVector3 view_dir((camera.at-camera.from).normalized());
             camera.at   += view_dir*(y2-y1)*ds_size;
             camera.from += view_dir*(y2-y1)*ds_size;
+            */
         }
         // No: we want a popup menu instead!
         //else if (mev->buttons() & Qt::RightButton)
@@ -698,7 +461,7 @@ void
 EL3DWindow::SettingsVarChanged(const QString &var)
 {
     ///\todo: just prototyping; only affect plot 0
-    Plot &p = plots[0];
+    eavlPlot &p = plots[0];
     delete p.pcRenderer;
     p.pcRenderer = NULL;
     p.variable_fieldindex = -1;

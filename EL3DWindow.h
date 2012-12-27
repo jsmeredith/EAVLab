@@ -10,6 +10,8 @@
 #include <eavlCamera.h>
 #include <eavlDataSet.h>
 
+#include <eavlWindow.h>
+
 class Pipeline;
 class eavlRenderer;
 
@@ -120,31 +122,12 @@ class EL3DWindow : public QGLWidget
     QMenu     *popup;
     bool       mousedown, shiftKey;
     int        lastx, lasty;
-    eavlCamera camera;
-    eavlPoint3 center;
-    float      dmin[3], dmax[3];
-    float      ds_size;
     bool       showghosts;
     bool       showmesh;
 
-    struct Plot
-    {
-        eavlDataSet  *data;
-        string        colortable;
-        double        vmin, vmax;
-        int           cellset_index;
-        int           variable_fieldindex;
-        //int           variable_cellindex;
-        eavlRenderer *pcRenderer;
-        eavlRenderer *meshRenderer;
-    };
+    eavlWindow *window;
 
-    vector<Plot> plots;
-
-    ///\todo: big hack for saved_colortable
-    string saved_colortable;
-    int colortexId;
-
+    vector<eavlPlot> plots;
 
   public slots:
     void CurrentPipelineChanged(int index);
