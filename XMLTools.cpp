@@ -78,7 +78,32 @@ XMLToken XMLScanner::GetNextToken(char *outbuff)
         c=in.get();
         while (c!='\"')
         {
-            if (c=='\\')
+#define ACCEPT_AMPERSAND_CODES
+#ifdef ACCEPT_AMPERSAND_CODES
+            if (c=='&')
+            {
+                string tmp;
+                c=in.get();
+                while (c != ';' && !in.eof())
+                {
+                    tmp += c;
+                    c=in.get();
+                }
+                if (tmp == "quot")
+                    *buff++ = '"';
+                else if (tmp == "amp")
+                    *buff++ = '&';
+                else if (tmp == "lt")
+                    *buff++ = '<';
+                else if (tmp == "gt")
+                    *buff++ = '>';
+                else
+                    cerr << "UNEXPECTED AMPERSAND CODE: "<<tmp<<endl;
+            }
+#endif
+#define ACCEPT_BACKSLASH_CODES
+#ifdef ACCEPT_BACKSLASH_CODES
+            else if (c=='\\')
             {
                 c=in.get();
                 if      (c=='n')  *buff++ = '\n';
@@ -129,6 +154,7 @@ XMLToken XMLScanner::GetNextToken(char *outbuff)
                 else
                     *buff++ = c;
             }
+#endif
             else
             {
                 if (c == '\n')
@@ -250,40 +276,51 @@ bool XMLParser::ParseXMLNestingAfterOpenBracket()
         a.value = acceptedText;
         attributes.push_back(a);
     }
-    Expect(TokClose);
-
-    // Okay, we got a whole element intro; let derived classes handle it
-    beginElement(elementName, attributes);
-
-    // If we get an open token, handle another nest; otherwise, it's just text
-    while (true)
+    if (Accept(TokSlash))
     {
-        if (Accept(TokOpen))
+        // if we see a slash, then we're getting a begin/end in a single step
+        Expect(TokClose);
+        beginElement(elementName, attributes);
+        endElement(elementName);
+    }
+    else
+    {
+        Expect(TokClose);
+
+        // Okay, we got a whole element intro; let derived classes handle it
+        beginElement(elementName, attributes);
+
+        // If we get an open token, handle another nest; otherwise, it's just text
+        while (true)
         {
-            if (Accept(TokSlash))
-                break;
-            ParseXMLNestingAfterOpenBracket();
+            if (Accept(TokOpen))
+            {
+                if (Accept(TokSlash))
+                    break;
+                ParseXMLNestingAfterOpenBracket();
+            }
+            else
+            {
+                handleText(currentText);
+                GetNextToken();
+            }
         }
-        else
+
+        // Can only get here once we get to a open-bracket and slash, so
+        // it had better be the matching close tag
+        Expect(TokLiteral);
+        if (acceptedText != elementName and
+            ErrorOnMismatchedTags)
         {
-            handleText(currentText);
-            GetNextToken();
+            throw Exception("Mismatched open/close tags at line %d: "
+                            "expected '%s' but got '%s'",
+                            scanner->GetCurrentLine(), elementName.c_str(),
+                            acceptedText);
         }
+        Expect(TokClose);
+        endElement(elementName);
     }
 
-    // Can only get here once we get to a open-bracket and slash, so
-    // it had better be the matching close tag
-    Expect(TokLiteral);
-    if (acceptedText != elementName and
-        ErrorOnMismatchedTags)
-    {
-        throw Exception("Mismatched open/close tags at line %d: "
-                        "expected '%s' but got '%s'",
-                        scanner->GetCurrentLine(), elementName.c_str(),
-                        acceptedText);
-    }
-    Expect(TokClose);
-    endElement(elementName);
     return true;
 }
 

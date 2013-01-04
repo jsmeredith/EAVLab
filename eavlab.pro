@@ -61,6 +61,16 @@ unix {
 HOST = $$system(hostname)
 SYS = $$system(uname -s)
 
+!equals(BOOST, no) {
+  INCLUDEPATH += $$BOOST/include
+  LIBS += $$BOOST_LDFLAGS $$BOOST_LIBS
+}
+
+!equals(MPI, no) {
+  QMAKE_CXXFLAGS += $$MPI_CPPFLAGS
+  LIBS += $$MPI_LDFLAGS $$MPI_LIBS
+}
+
 !equals(NETCDF, no) {
   INCLUDEPATH += $$NETCDF/include
   LIBS += $$NETCDF_LDFLAGS $$NETCDF_LIBS

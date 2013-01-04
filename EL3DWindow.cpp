@@ -30,7 +30,7 @@ EL3DWindow::EL3DWindow(ELWindowManager *parent)
     showghosts = false;
     showmesh = false;
 
-    window = new eavl3DOpenGLWindow;
+    window = new eavl3DGLWindow;
 
     ///\todo: hack: assuming 4 pipelines
     currentPipeline = 0;
@@ -70,8 +70,6 @@ EL3DWindow::PipelineUpdated(int index, Pipeline *pipe)
 
     p.variable_fieldindex = -1;
     p.cellset_index = -1;
-    p.vmin = 0;
-    p.vmax = 0;
 
     p.data = pipe->result;
 
