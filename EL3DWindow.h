@@ -1,4 +1,4 @@
-// Copyright 2012 UT-Battelle, LLC.  See LICENSE.txt for more information.
+// Copyright 2012-2013 UT-Battelle, LLC.  See LICENSE.txt for more information.
 #ifndef EL_3D_WINDOW_H
 #define EL_3D_WINDOW_H
 
@@ -9,11 +9,13 @@
 
 #include <eavlCamera.h>
 #include <eavlDataSet.h>
+#include <eavlPlot.h>
 
-#include <eavlWindow.h>
-
+class eavlWindow;
 class Pipeline;
 class eavlRenderer;
+class eavlColorBarAnnotation;
+class eavlBoundingBoxAnnotation;
 
 // ****************************************************************************
 // Class:  EL3DWindowSettings
@@ -126,6 +128,8 @@ class EL3DWindow : public QGLWidget
     bool       showmesh;
 
     eavlWindow *window;
+    eavlColorBarAnnotation *colorbar;
+    eavlBoundingBoxAnnotation *bbox;
 
     vector<eavlPlot> plots;
 

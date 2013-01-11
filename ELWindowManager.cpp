@@ -1,4 +1,4 @@
-// Copyright 2012 UT-Battelle, LLC.  See LICENSE.txt for more information.
+// Copyright 2012-2013 UT-Battelle, LLC.  See LICENSE.txt for more information.
 #include "ELWindowManager.h"
 
 #include "STL.h"
@@ -13,6 +13,7 @@
 
 #include "ELBasicInfoWindow.h"
 #include "EL3DWindow.h"
+#include "EL2DWindow.h"
 #include "ELEmptyWindow.h"
 
 struct Arrangement
@@ -557,6 +558,14 @@ ELWindowManager::ChangeWindowType(int index, const QString &type)
     if (type == "3D View")
     {
         EL3DWindow *newwin = new EL3DWindow(this);
+        QWidget *newwinsettings = newwin->GetSettings();
+        settings[index] = newwinsettings;
+        windowframes[index]->SetWindow(newwin);
+        emit WindowAdded(windowframes[index]->GetWindow());
+    }
+    else if (type == "2D View")
+    {
+        EL2DWindow *newwin = new EL2DWindow(this);
         QWidget *newwinsettings = newwin->GetSettings();
         settings[index] = newwinsettings;
         windowframes[index]->SetWindow(newwin);

@@ -1,4 +1,4 @@
-// Copyright 2012 UT-Battelle, LLC.  See LICENSE.txt for more information.
+// Copyright 2012-2013 UT-Battelle, LLC.  See LICENSE.txt for more information.
 #include "ELMainWindow.h"
 
 #include <QCheckBox>
@@ -124,7 +124,7 @@ void ELMainWindow::Exit()
 void
 ELMainWindow::OpenFile()
 {
-    QString extensions = "*.vtk *.bov *.pdb";
+    QString extensions = "*.vtk *.bov *.pdb *.png";
 #ifdef HAVE_SILO
     extensions += " *.silo";
     extensions += " *.chi";

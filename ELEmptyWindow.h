@@ -1,4 +1,4 @@
-// Copyright 2012 UT-Battelle, LLC.  See LICENSE.txt for more information.
+// Copyright 2012-2013 UT-Battelle, LLC.  See LICENSE.txt for more information.
 #ifndef EL_EMPTY_WINDOW_H
 #define EL_EMPTY_WINDOW_H
 

@@ -1,4 +1,4 @@
-// Copyright 2012 UT-Battelle, LLC.  See LICENSE.txt for more information.
+// Copyright 2012-2013 UT-Battelle, LLC.  See LICENSE.txt for more information.
 #include "EL3DWindow.h"
 
 #include <QMouseEvent>
@@ -8,6 +8,14 @@
 
 #include <eavlColorTable.h>
 #include <eavlRenderer.h>
+#include <eavlWindow.h>
+#include <eavlBitmapFont.h>
+#include <eavlBitmapFontFactory.h>
+#include <eavlPNGImporter.h>
+#include <eavlTexture.h>
+#include <eavlTextAnnotation.h>
+#include <eavlColorBarAnnotation.h>
+#include <eavlBoundingBoxAnnotation.h>
 
 #include <cfloat>
 
@@ -31,6 +39,8 @@ EL3DWindow::EL3DWindow(ELWindowManager *parent)
     showmesh = false;
 
     window = new eavl3DGLWindow;
+    colorbar = new eavlColorBarAnnotation(window);
+    bbox = new eavlBoundingBoxAnnotation(window);
 
     ///\todo: hack: assuming 4 pipelines
     currentPipeline = 0;
@@ -125,7 +135,7 @@ EL3DWindow::CurrentPipelineChanged(int index)
 void
 EL3DWindow::initializeGL()
 {
-    makeCurrent();
+    //makeCurrent();
     window->Initialize();
 }
 
@@ -171,6 +181,10 @@ EL3DWindow::ResetView()
 void
 EL3DWindow::paintGL()
 {
+    glClearColor(0.0, 0.15, 0.3, 1.0);
+    glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+
+    bool shoulddraw = false;
     window->plots.clear();
     for (unsigned int i=0;  i<plots.size(); i++)
     {
@@ -185,6 +199,7 @@ EL3DWindow::paintGL()
         eavlPlot &p = plots[i];
         if (!p.data)
             continue;
+        shoulddraw = true;
 
         if (!p.pcRenderer && p.variable_fieldindex >= 0)
         {
@@ -201,9 +216,101 @@ EL3DWindow::paintGL()
         window->plots.push_back(p);
     }
 
-
-    makeCurrent();
     window->Paint();
+
+    ///\todo: note: there's some issue where this method is getting
+    /// called before it's supposed to be.  (I believe it's from
+    /// my use of updateGL() in other methods in this class when
+    /// e.g. the variable or other settings change.)  If we continue
+    /// on anyway, then something bad happens, such as creating
+    /// a texture with either the wrong thread or before the context
+    /// is ready, which makes the texture unusable.  A safe test
+    /// we currently use before proceeding is simply whether or
+    /// not any of the plots have data, because we know everything
+    /// is safely initialized since the user was able to hit Execute.
+    if (!shoulddraw)
+        return;
+
+    // okay, we think it's safe to proceed now!
+
+#if 0
+    // test of font rendering
+    static eavlTextAnnotation *t1=NULL,*t1b=NULL,*t1c=NULL, *t2=NULL,*t3=NULL,*t3b=NULL, *t4=NULL,*t4b=NULL;
+    if (!t1)
+    {
+        t1 = new eavlScreenTextAnnotation(window,"Test 2D text, [] height=0.03 near upper-left corner (.1,.9)",
+                                          eavlColor::white, .03,
+                                          0.1, 0.9);
+        t1b = new eavlScreenTextAnnotation(window,"Test 2D text, [] height=0.03 at (.1,.87) should be immediately below other 2D text",
+                                           eavlColor::white, .03,
+                                           0.1, 0.87);
+        t1c = new eavlScreenTextAnnotation(window,"Test 2D text, [] height=0.03 at (.1,.1) oriented at 90 degrees",
+                                           eavlColor::white, .03,
+                                           0.1, 0.1, 90.);
+        t2 = new eavlWorldTextAnnotation(window,"Test 3D text (You), height=1.0 in 3D space at (-5,0,0), diagonal along X=Z, Y=up",
+                                         eavlColor::white,
+                                         1.0,
+                                         -5,0,0,
+                                         1,0,-1,
+                                         0,1,0);
+        t3 = new eavlBillboardTextAnnotation(window,"Test 3D billboard text, height=0.03 in screen space at (0,5,0)",
+                                    eavlColor::white,
+                                    .03,
+                                    0,5,0, true);
+        t3b = new eavlBillboardTextAnnotation(window,"Test 3D billboard text, height=1.0 in 3D space at (0,-12,0)",
+                                    eavlColor::white,
+                                    1.0,
+                                    0,-12,0, false);
+
+        t4 = new eavlBillboardTextAnnotation(window,"Test 3D billboard text, height in screen space at 90deg",
+                                             eavlColor::white,
+                                             .03,
+                                             0,5,0, true, 90.0);
+        t4b = new eavlBillboardTextAnnotation(window,"Test 3D billboard text, height in 3D space at 90deg",
+                                              eavlColor::white,
+                                              1.0,
+                                              0,-12,0, false, 90.0);
+    }
+
+
+    t1->Setup(window->camera);
+    t1->Render();
+
+    t1b->Setup(window->camera);
+    t1b->Render();
+
+    t1c->Setup(window->camera);
+    t1c->Render();
+
+    t2->Setup(window->camera);
+    t2->Render();
+
+    t3->Setup(window->camera);
+    t3->Render();
+
+    t3b->Setup(window->camera);
+    t3b->Render();
+
+    t4->Setup(window->camera);
+    t4->Render();
+
+    t4b->Setup(window->camera);
+    t4b->Render();
+#endif
+
+    colorbar->SetColorTable(plots[0].colortable);
+    colorbar->Setup(window->camera);
+    colorbar->Render();
+
+    bbox->SetExtents(((eavl3DGLWindow*)window)->dmin[0],
+                     ((eavl3DGLWindow*)window)->dmax[0],
+                     ((eavl3DGLWindow*)window)->dmin[1],
+                     ((eavl3DGLWindow*)window)->dmax[1],
+                     ((eavl3DGLWindow*)window)->dmin[2],
+                     ((eavl3DGLWindow*)window)->dmax[2]);
+    bbox->Setup(window->camera);
+    bbox->Render();
+                     
 }
 
 // ****************************************************************************
@@ -224,7 +331,7 @@ EL3DWindow::paintGL()
 void
 EL3DWindow::resizeGL(int w, int h)
 {
-    makeCurrent();
+    //makeCurrent();
     window->Resize(w,h);
 }
 

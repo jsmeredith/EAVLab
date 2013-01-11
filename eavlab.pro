@@ -14,6 +14,7 @@ SOURCES += main.cpp\
     ELWindowManager.cpp \
     ELEmptyWindow.cpp \
     ELWindowFrame.cpp \
+    EL2DWindow.cpp \
     EL3DWindow.cpp \
     ELBasicInfoWindow.cpp \
     ELPipelineBuilder.cpp \
@@ -41,8 +42,8 @@ HEADERS  += $$files(*.h) \
 
 FORMS    +=
 
-DEPENDPATH += $$EAVLROOT/config $$EAVLROOT/src/common $$EAVLROOT/src/importers $$EAVLROOT/src/filters $$EAVLROOT/src/exporters $$EAVLROOT/src/math $$EAVLROOT/src/rendering
-INCLUDEPATH += $$EAVLROOT/config $$EAVLROOT/src/common $$EAVLROOT/src/importers $$EAVLROOT/src/filters $$EAVLROOT/src/exporters $$EAVLROOT/src/math $$EAVLROOT/src/rendering
+DEPENDPATH += $$EAVLROOT/config $$EAVLROOT/src/common $$EAVLROOT/src/fonts $$EAVLROOT/src/importers $$EAVLROOT/src/filters $$EAVLROOT/src/exporters $$EAVLROOT/src/math $$EAVLROOT/src/rendering
+INCLUDEPATH += $$EAVLROOT/config $$EAVLROOT/src/common $$EAVLROOT/src/fonts $$EAVLROOT/src/importers $$EAVLROOT/src/filters $$EAVLROOT/src/exporters $$EAVLROOT/src/math $$EAVLROOT/src/rendering
 
 win32 {
   LIBS += -L$$EAVLROOT/Debug/lib -L$$EAVLROOT/../eavl-build-desktop/debug/lib -leavl
