@@ -7,7 +7,7 @@
 #include <QTextEdit>
 #include <QGLWidget>
 
-#include <eavlCamera.h>
+#include <eavlView.h>
 #include <eavlDataSet.h>
 #include <eavlPlot.h>
 
@@ -130,6 +130,7 @@ class EL3DWindow : public QGLWidget
     eavlWindow *window;
     eavlColorBarAnnotation *colorbar;
     eavlBoundingBoxAnnotation *bbox;
+    eavlView view;
 
     vector<eavlPlot> plots;
 

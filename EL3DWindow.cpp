@@ -38,7 +38,8 @@ EL3DWindow::EL3DWindow(ELWindowManager *parent)
     showghosts = false;
     showmesh = false;
 
-    window = new eavl3DGLWindow;
+    view.viewtype = eavlView::EAVL_VIEW_3D;
+    window = new eavl3DGLWindow(view);
     colorbar = new eavlColorBarAnnotation(window);
     bbox = new eavlBoundingBoxAnnotation(window);
 
@@ -273,33 +274,33 @@ EL3DWindow::paintGL()
     }
 
 
-    t1->Setup(window->camera);
+    t1->Setup(view);
     t1->Render();
 
-    t1b->Setup(window->camera);
+    t1b->Setup(view);
     t1b->Render();
 
-    t1c->Setup(window->camera);
+    t1c->Setup(view);
     t1c->Render();
 
-    t2->Setup(window->camera);
+    t2->Setup(view);
     t2->Render();
 
-    t3->Setup(window->camera);
+    t3->Setup(view);
     t3->Render();
 
-    t3b->Setup(window->camera);
+    t3b->Setup(view);
     t3b->Render();
 
-    t4->Setup(window->camera);
+    t4->Setup(view);
     t4->Render();
 
-    t4b->Setup(window->camera);
+    t4b->Setup(view);
     t4b->Render();
 #endif
 
     colorbar->SetColorTable(plots[0].colortable);
-    colorbar->Setup(window->camera);
+    colorbar->Setup(view);
     colorbar->Render();
 
     bbox->SetExtents(((eavl3DGLWindow*)window)->dmin[0],
@@ -308,7 +309,7 @@ EL3DWindow::paintGL()
                      ((eavl3DGLWindow*)window)->dmax[1],
                      ((eavl3DGLWindow*)window)->dmin[2],
                      ((eavl3DGLWindow*)window)->dmax[2]);
-    bbox->Setup(window->camera);
+    bbox->Setup(view);
     bbox->Render();
                      
 }
@@ -331,6 +332,8 @@ EL3DWindow::paintGL()
 void
 EL3DWindow::resizeGL(int w, int h)
 {
+    view.w = w;
+    view.h = h;
     //makeCurrent();
     window->Resize(w,h);
 }
@@ -385,7 +388,6 @@ EL3DWindow::mouseMoveEvent(QMouseEvent *mev)
 
     if (mousedown)
     {
-        eavlCamera &camera = window->camera;
         float x1 =  ((float(lastx*2)/float(width()))  - 1.0);
         float y1 = -((float(lasty*2)/float(height())) - 1.0);
         float x2 =  ((float(  x  *2)/float(width()))  - 1.0);
@@ -396,24 +398,24 @@ EL3DWindow::mouseMoveEvent(QMouseEvent *mev)
             if (shiftKey)
             {
                 eavlMatrix4x4 R;
-                R.CreateRBT(camera.from, camera.at, camera.up);
+                R.CreateRBT(view.view3d.from, view.view3d.at, view.view3d.up);
                 eavlVector3 pan(5.0*(x1-x2),5.0*(y1-y2),0);
                 pan = R*pan;
                 eavlMatrix4x4 T;
                 T.CreateTranslate(pan);
-                camera.from = T*camera.from;
-                camera.at   = T*camera.at;
+                view.view3d.from = T*view.view3d.from;
+                view.view3d.at   = T*view.view3d.at;
             }
             else
             {
                 eavlMatrix4x4 R1;
                 R1.CreateTrackball(-x1,-y1, -x2,-y2);
                 eavlMatrix4x4 T1;
-                T1.CreateTranslate(-camera.at);
+                T1.CreateTranslate(-view.view3d.at);
                 eavlMatrix4x4 T2;
-                T2.CreateTranslate(camera.at);
+                T2.CreateTranslate(view.view3d.at);
                 
-                eavlMatrix4x4 V1(camera.V);
+                eavlMatrix4x4 V1(view.V);
                 V1.m[0][3]=0;
                 V1.m[1][3]=0;
                 V1.m[2][3]=0;
@@ -422,9 +424,9 @@ EL3DWindow::mouseMoveEvent(QMouseEvent *mev)
                 
                 eavlMatrix4x4 MM = T2 * V2 * R1 * V1 * T1;
                 
-                camera.from = MM*camera.from;
-                camera.at   = MM*camera.at;
-                camera.up   = MM*camera.up;
+                view.view3d.from = MM*view.view3d.from;
+                view.view3d.at   = MM*view.view3d.at;
+                view.view3d.up   = MM*view.view3d.up;
             }
         }
         else if (mev->buttons() & Qt::MidButton)
