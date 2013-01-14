@@ -303,12 +303,12 @@ EL3DWindow::paintGL()
     colorbar->Setup(view);
     colorbar->Render();
 
-    bbox->SetExtents(((eavl3DGLWindow*)window)->dmin[0],
-                     ((eavl3DGLWindow*)window)->dmax[0],
-                     ((eavl3DGLWindow*)window)->dmin[1],
-                     ((eavl3DGLWindow*)window)->dmax[1],
-                     ((eavl3DGLWindow*)window)->dmin[2],
-                     ((eavl3DGLWindow*)window)->dmax[2]);
+    bbox->SetExtents(view.minextents[0],
+                     view.maxextents[0],
+                     view.minextents[1],
+                     view.maxextents[1],
+                     view.minextents[2],
+                     view.maxextents[2]);
     bbox->Setup(view);
     bbox->Render();
                      
@@ -397,14 +397,10 @@ EL3DWindow::mouseMoveEvent(QMouseEvent *mev)
         {
             if (shiftKey)
             {
-                eavlMatrix4x4 R;
-                R.CreateRBT(view.view3d.from, view.view3d.at, view.view3d.up);
-                eavlVector3 pan(5.0*(x1-x2),5.0*(y1-y2),0);
-                pan = R*pan;
-                eavlMatrix4x4 T;
-                T.CreateTranslate(pan);
-                view.view3d.from = T*view.view3d.from;
-                view.view3d.at   = T*view.view3d.at;
+                float dx = x2-x1;
+                float dy = y2-y1;
+                view.view3d.xpan += dx;
+                view.view3d.ypan += dy;
             }
             else
             {
@@ -431,12 +427,10 @@ EL3DWindow::mouseMoveEvent(QMouseEvent *mev)
         }
         else if (mev->buttons() & Qt::MidButton)
         {
-            ///\todo: disabled zoom for now; bad way to do this...
-            /*
-            eavlVector3 view_dir((camera.at-camera.from).normalized());
-            camera.at   += view_dir*(y2-y1)*ds_size;
-            camera.from += view_dir*(y2-y1)*ds_size;
-            */
+            double z = 1 + (y2-y1);
+            view.view3d.zoom *= z;
+            view.view3d.xpan *= z;
+            view.view3d.ypan *= z;
         }
         // No: we want a popup menu instead!
         //else if (mev->buttons() & Qt::RightButton)
