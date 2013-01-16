@@ -16,6 +16,7 @@
 #include <eavlTextAnnotation.h>
 #include <eavlColorBarAnnotation.h>
 #include <eavlBoundingBoxAnnotation.h>
+#include <eavl3DAxisAnnotation.h>
 
 #include <cfloat>
 
@@ -42,6 +43,9 @@ EL3DWindow::EL3DWindow(ELWindowManager *parent)
     window = new eavl3DGLWindow(view);
     colorbar = new eavlColorBarAnnotation(window);
     bbox = new eavlBoundingBoxAnnotation(window);
+    xaxis = new eavl3DAxisAnnotation(window);
+    yaxis = new eavl3DAxisAnnotation(window);
+    zaxis = new eavl3DAxisAnnotation(window);
 
     ///\todo: hack: assuming 4 pipelines
     currentPipeline = 0;
@@ -77,6 +81,7 @@ EL3DWindow::EL3DWindow(ELWindowManager *parent)
 void
 EL3DWindow::PipelineUpdated(int index, Pipeline *pipe)
 {
+    //cerr << "EL3DWindow::PipelineUpdated\n";
     eavlPlot &p = plots[index];
 
     p.variable_fieldindex = -1;
@@ -91,9 +96,11 @@ EL3DWindow::PipelineUpdated(int index, Pipeline *pipe)
         delete p.meshRenderer;
     p.meshRenderer = NULL;
 
+    UpdatePlots();
+    ResetView();
+
     settings->UpdateFromPipeline(pipe);
 
-    ResetView();
 }
 
 // ****************************************************************************
@@ -113,7 +120,9 @@ EL3DWindow::PipelineUpdated(int index, Pipeline *pipe)
 void
 EL3DWindow::CurrentPipelineChanged(int index)
 {
+    //cerr << "EL3DWindow::CurrentPipelineChanged\n";
     currentPipeline = index;
+    UpdatePlots();
     if (watchedPipelines[0])
         updateGL();
 }
@@ -140,51 +149,10 @@ EL3DWindow::initializeGL()
     window->Initialize();
 }
 
-// ****************************************************************************
-// Method:  EL3DWindow::ResetView
-//
-// Purpose:
-///   Sets up the camera based on the current pipelines.
-//
-// Arguments:
-//   w,h        new width, height
-//
-// Programmer:  Jeremy Meredith
-// Creation:    August 16, 2012
-//
-// Modifications:
-// ****************************************************************************
-void
-EL3DWindow::ResetView()
+bool
+EL3DWindow::UpdatePlots()
 {
-    window->ResetView();
-    updateGL();
-}
-
-// ****************************************************************************
-// Method:  EL3DWindow::paintGL
-//
-// Purpose:
-///   QGLWidget method for when the window needs to be painter.
-///   This does all the drawing.
-//
-// Arguments:
-//   none
-//
-// Programmer:  Jeremy Meredith
-// Creation:    August 16, 2012
-//
-// Modifications:
-//   Jeremy Meredith, Thu Nov 29 12:19:33 EST 2012
-//   Added nodal surface normal lighting support.
-//
-// ****************************************************************************
-void
-EL3DWindow::paintGL()
-{
-    glClearColor(0.0, 0.15, 0.3, 1.0);
-    glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-
+    //cerr << "EL3DWindow::UpdatePlots\n";
     bool shoulddraw = false;
     window->plots.clear();
     for (unsigned int i=0;  i<plots.size(); i++)
@@ -216,8 +184,58 @@ EL3DWindow::paintGL()
 
         window->plots.push_back(p);
     }
+    return shoulddraw;
+}
 
-    window->Paint();
+// ****************************************************************************
+// Method:  EL3DWindow::ResetView
+//
+// Purpose:
+///   Sets up the camera based on the current pipelines.
+//
+// Arguments:
+//   w,h        new width, height
+//
+// Programmer:  Jeremy Meredith
+// Creation:    August 16, 2012
+//
+// Modifications:
+// ****************************************************************************
+void
+EL3DWindow::ResetView()
+{
+    //cerr << "EL3DWindow::ResetView\n";
+    UpdatePlots();
+    window->ResetView();
+    updateGL();
+}
+
+// ****************************************************************************
+// Method:  EL3DWindow::paintGL
+//
+// Purpose:
+///   QGLWidget method for when the window needs to be painter.
+///   This does all the drawing.
+//
+// Arguments:
+//   none
+//
+// Programmer:  Jeremy Meredith
+// Creation:    August 16, 2012
+//
+// Modifications:
+//   Jeremy Meredith, Thu Nov 29 12:19:33 EST 2012
+//   Added nodal surface normal lighting support.
+//
+// ****************************************************************************
+void
+EL3DWindow::paintGL()
+{
+    //cerr << "EL3DWindow::paintGL\n";
+    glClearColor(0.0, 0.15, 0.3, 1.0);
+    glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+
+    bool shoulddraw = UpdatePlots();
 
     ///\todo: note: there's some issue where this method is getting
     /// called before it's supposed to be.  (I believe it's from
@@ -233,6 +251,17 @@ EL3DWindow::paintGL()
         return;
 
     // okay, we think it's safe to proceed now!
+    
+    // we're doing the color bar first since it
+    // sets up the texture we need for the plots....
+    // (no, that is not a good thing, we should
+    // fix that....)
+    colorbar->SetColorTable(plots[0].colortable);
+    colorbar->Setup(view);
+    colorbar->Render();
+
+    window->Paint();
+
 
 #if 0
     // test of font rendering
@@ -299,10 +328,6 @@ EL3DWindow::paintGL()
     t4b->Render();
 #endif
 
-    colorbar->SetColorTable(plots[0].colortable);
-    colorbar->Setup(view);
-    colorbar->Render();
-
     bbox->SetExtents(view.minextents[0],
                      view.maxextents[0],
                      view.minextents[1],
@@ -311,7 +336,69 @@ EL3DWindow::paintGL()
                      view.maxextents[2]);
     bbox->Setup(view);
     bbox->Render();
-                     
+
+    double ds_size = sqrt( (view.maxextents[0]-view.minextents[0])*(view.maxextents[0]-view.minextents[0]) +
+                           (view.maxextents[1]-view.minextents[1])*(view.maxextents[1]-view.minextents[1]) +
+                           (view.maxextents[2]-view.minextents[2])*(view.maxextents[2]-view.minextents[2]) );
+
+    glDepthRange(-.0001,.9999);
+
+    view.SetMatricesForViewport();
+    eavlVector3 viewdir = view.view3d.at - view.view3d.from;
+    bool xtest = (viewdir * eavlVector3(1,0,0)) >= 0;
+    bool ytest = (viewdir * eavlVector3(0,1,0)) >= 0;
+    bool ztest = (viewdir * eavlVector3(0,0,1)) >= 0;
+    xtest = !xtest;
+    ytest = !ytest;
+
+    xaxis->SetAxis(0);
+    xaxis->SetTickInvert(xtest,ytest,ztest);
+    xaxis->SetWorldPosition(view.minextents[0],
+                            ytest ? view.minextents[1] : view.maxextents[1],
+                            ztest ? view.minextents[2] : view.maxextents[2],
+                            view.maxextents[0],
+                            ytest ? view.minextents[1] : view.maxextents[1],
+                            ztest ? view.minextents[2] : view.maxextents[2]);
+    xaxis->SetRange(view.minextents[0], view.maxextents[0]);
+    xaxis->SetMajorTickSize(ds_size / 40., 0);
+    xaxis->SetMinorTickSize(ds_size / 80., 0);
+    xaxis->SetLabelFontScale(ds_size / 30.);
+    xaxis->Setup(view);
+    xaxis->Render();
+
+    yaxis->SetAxis(1);
+    yaxis->SetTickInvert(xtest,ytest,ztest);
+    yaxis->SetWorldPosition(xtest ? view.minextents[0] : view.maxextents[0],
+                            view.minextents[1],
+                            ztest ? view.minextents[2] : view.maxextents[2],
+                            xtest ? view.minextents[0] : view.maxextents[0],
+                            view.maxextents[1],
+                            ztest ? view.minextents[2] : view.maxextents[2]);
+    yaxis->SetRange(view.minextents[1], view.maxextents[1]);
+    yaxis->SetMajorTickSize(ds_size / 40., 0);
+    yaxis->SetMinorTickSize(ds_size / 80., 0);
+    yaxis->SetLabelFontScale(ds_size / 30.);
+    yaxis->Setup(view);
+    yaxis->Render();
+
+    //xtest = !xtest;
+    ytest = !ytest;
+    zaxis->SetAxis(2);
+    zaxis->SetTickInvert(xtest,ytest,ztest);
+    zaxis->SetWorldPosition(xtest ? view.minextents[0] : view.maxextents[0],
+                            ytest ? view.minextents[1] : view.maxextents[1],
+                            view.minextents[2],
+                            xtest ? view.minextents[0] : view.maxextents[0],
+                            ytest ? view.minextents[1] : view.maxextents[1],
+                            view.maxextents[2]);
+    zaxis->SetRange(view.minextents[2], view.maxextents[2]);
+    zaxis->SetMajorTickSize(ds_size / 40., 0);
+    zaxis->SetMinorTickSize(ds_size / 80., 0);
+    zaxis->SetLabelFontScale(ds_size / 30.);
+    zaxis->Setup(view);
+    zaxis->Render();
+
+    glDepthRange(0,1);
 }
 
 // ****************************************************************************
@@ -536,6 +623,7 @@ EL3DWindow::GetSettings()
 void
 EL3DWindow::SettingsColorTableChanged(const QString &ct)
 {
+    //cerr << "EL3DWindow::SettingsColorTableChanged\n";
     ///\todo: just prototyping; only affect plot 0
     plots[0].colortable = ct.toStdString();
     updateGL();
@@ -561,6 +649,7 @@ EL3DWindow::SettingsColorTableChanged(const QString &ct)
 void
 EL3DWindow::SettingsVarChanged(const QString &var)
 {
+    //cerr << "EL3DWindow::SettingsVarChanged\n";
     ///\todo: just prototyping; only affect plot 0
     eavlPlot &p = plots[0];
     delete p.pcRenderer;

@@ -16,6 +16,7 @@ class Pipeline;
 class eavlRenderer;
 class eavlColorBarAnnotation;
 class eavl2DAxisAnnotation;
+class eavl2DFrameAnnotation;
 
 // ****************************************************************************
 // Class:  EL2DWindowSettings
@@ -130,6 +131,7 @@ class EL2DWindow : public QGLWidget
     eavlWindow *window;
     eavlColorBarAnnotation *colorbar;
     eavl2DAxisAnnotation *haxis, *vaxis;
+    eavl2DFrameAnnotation *frame;
     eavlView view;
 
     vector<eavlPlot> plots;
@@ -139,6 +141,7 @@ class EL2DWindow : public QGLWidget
     void PipelineUpdated(int index, Pipeline *p);
     void watchedPipelinesChanged(vector<bool>);
     void ResetView();
+    bool UpdatePlots();
 
     void SettingsColorTableChanged(const QString&);
     void SettingsVarChanged(const QString&);

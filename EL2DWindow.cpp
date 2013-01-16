@@ -16,6 +16,7 @@
 #include <eavlTextAnnotation.h>
 #include <eavlColorBarAnnotation.h>
 #include <eavl2DAxisAnnotation.h>
+#include <eavl2DFrameAnnotation.h>
 
 #include <cfloat>
 
@@ -47,6 +48,7 @@ EL2DWindow::EL2DWindow(ELWindowManager *parent)
     colorbar = new eavlColorBarAnnotation(window);
     haxis = new eavl2DAxisAnnotation(window);
     vaxis = new eavl2DAxisAnnotation(window);
+    frame = new eavl2DFrameAnnotation(window);
 
     ///\todo: hack: assuming 4 pipelines
     currentPipeline = 0;
@@ -96,9 +98,10 @@ EL2DWindow::PipelineUpdated(int index, Pipeline *pipe)
         delete p.meshRenderer;
     p.meshRenderer = NULL;
 
-    settings->UpdateFromPipeline(pipe);
-
+    UpdatePlots();
     ResetView();
+
+    settings->UpdateFromPipeline(pipe);
 }
 
 // ****************************************************************************
@@ -119,6 +122,7 @@ void
 EL2DWindow::CurrentPipelineChanged(int index)
 {
     currentPipeline = index;
+    UpdatePlots();
     if (watchedPipelines[0])
         updateGL();
 }
@@ -144,6 +148,46 @@ EL2DWindow::initializeGL()
     //makeCurrent();
     window->Initialize();
 }
+
+
+bool
+EL2DWindow::UpdatePlots()
+{
+    //cerr << "EL3DWindow::UpdatePlots\n";
+    bool shoulddraw = false;
+    window->plots.clear();
+    for (unsigned int i=0;  i<plots.size(); i++)
+    {
+        bool watchingCurrent = watchedPipelines[0];
+        bool watchingThis = watchedPipelines[i+1];
+        //cerr << "i="<<i<<" watchingCurrent="<<watchingCurrent
+        //     <<" watchingThis="<<watchingThis<<endl;
+        if (!(watchingCurrent && currentPipeline==(int)i) &&
+            !watchingThis)
+            continue;
+
+        eavlPlot &p = plots[i];
+        if (!p.data)
+            continue;
+        shoulddraw = true;
+
+        if (!p.pcRenderer && p.variable_fieldindex >= 0)
+        {
+            p.pcRenderer = new eavlPseudocolorRenderer(p.data, 
+                                                       p.colortable,
+                                                       p.data->GetField(p.variable_fieldindex)->GetArray()->GetName());
+        }
+        if (!p.meshRenderer)
+        {
+            p.meshRenderer = new eavlSingleColorRenderer(p.data, 
+                                                         eavlColor::white);
+        }
+
+        window->plots.push_back(p);
+    }
+    return shoulddraw;
+}
+
 
 // ****************************************************************************
 // Method:  EL2DWindow::ResetView
@@ -190,39 +234,7 @@ EL2DWindow::paintGL()
     glClearColor(0.0, 0.15, 0.3, 1.0);
     glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
-    bool shoulddraw = false;
-    window->plots.clear();
-    for (unsigned int i=0;  i<plots.size(); i++)
-    {
-        bool watchingCurrent = watchedPipelines[0];
-        bool watchingThis = watchedPipelines[i+1];
-        //cerr << "i="<<i<<" watchingCurrent="<<watchingCurrent
-        //     <<" watchingThis="<<watchingThis<<endl;
-        if (!(watchingCurrent && currentPipeline==(int)i) &&
-            !watchingThis)
-            continue;
-
-        eavlPlot &p = plots[i];
-        if (!p.data)
-            continue;
-        shoulddraw = true;
-
-        if (!p.pcRenderer && p.variable_fieldindex >= 0)
-        {
-            p.pcRenderer = new eavlPseudocolorRenderer(p.data, 
-                                                       p.colortable,
-                                                       p.data->GetField(p.variable_fieldindex)->GetArray()->GetName());
-        }
-        if (!p.meshRenderer)
-        {
-            p.meshRenderer = new eavlSingleColorRenderer(p.data, 
-                                                         eavlColor::white);
-        }
-
-        window->plots.push_back(p);
-    }
-
-    window->Paint();
+    bool shoulddraw = UpdatePlots();
 
     ///\todo: note: there's some issue where this method is getting
     /// called before it's supposed to be.  (I believe it's from
@@ -242,6 +254,8 @@ EL2DWindow::paintGL()
     colorbar->Setup(view);
     colorbar->Render();
 
+    window->Paint();
+
     // test of font rendering
     static eavlTextAnnotation *tt=NULL;
     if (!tt)
@@ -259,6 +273,10 @@ EL2DWindow::paintGL()
     float vl, vr, vt, vb;
     view.GetReal2DViewport(vl,vr,vb,vt);
 
+    frame->Setup(view);
+    frame->SetExtents(vl,vr, vb,vt);
+    frame->Render();
+
     haxis->SetScreenPosition(vl,vb, vr,vb);
     haxis->SetRange(view.view2d.l, view.view2d.r);
     haxis->SetMajorTickSize(0, .05, 1.0);
@@ -274,6 +292,7 @@ EL2DWindow::paintGL()
     vaxis->SetLabelAnchor(1.0, 0.47);
     vaxis->Setup(view);
     vaxis->Render();
+
 
 }
 

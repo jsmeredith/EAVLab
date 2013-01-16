@@ -16,6 +16,7 @@ class Pipeline;
 class eavlRenderer;
 class eavlColorBarAnnotation;
 class eavlBoundingBoxAnnotation;
+class eavl3DAxisAnnotation;
 
 // ****************************************************************************
 // Class:  EL3DWindowSettings
@@ -106,7 +107,6 @@ class EL3DWindow : public QGLWidget
     virtual void  mousePressEvent(QMouseEvent*);
     virtual void  mouseReleaseEvent(QMouseEvent*);
 
-
     QWidget *GetSettings();
     /*
     virtual void contextMenuEvent(QContextMenuEvent*); 
@@ -130,6 +130,7 @@ class EL3DWindow : public QGLWidget
     eavlWindow *window;
     eavlColorBarAnnotation *colorbar;
     eavlBoundingBoxAnnotation *bbox;
+    eavl3DAxisAnnotation *xaxis, *yaxis, *zaxis;
     eavlView view;
 
     vector<eavlPlot> plots;
@@ -139,6 +140,7 @@ class EL3DWindow : public QGLWidget
     void PipelineUpdated(int index, Pipeline *p);
     void watchedPipelinesChanged(vector<bool>);
     void ResetView();
+    bool UpdatePlots();
 
     void SettingsColorTableChanged(const QString&);
     void SettingsVarChanged(const QString&);
