@@ -250,24 +250,59 @@ EL2DWindow::paintGL()
         return;
 
     // okay, we think it's safe to proceed now!
-    colorbar->SetColorTable(plots[0].colortable);
-    colorbar->Setup(view);
-    colorbar->Render();
+    if (plots[0].pcRenderer)
+    {
+        double vmin, vmax;
+        ((eavlPseudocolorRenderer*)(plots[0].pcRenderer))->GetLimits(vmin, vmax);
+        colorbar->SetRange(vmin, vmax, 5);
+        colorbar->SetColorTable(plots[0].colortable);
+        colorbar->Setup(view);
+        colorbar->Render();
+    }
 
     window->Paint();
 
     // test of font rendering
+#if 0
     static eavlTextAnnotation *tt=NULL;
     if (!tt)
     {
-        tt = new eavlScreenTextAnnotation(window,"Test 2D text, [] height=0.03 centered with top anchor at 0.9y",
-                                          eavlColor::white, .05,
-                                          0, 0.9);
-        tt->SetAnchor(.5,1);
+        switch (4)
+        {
+          case 1:
+            tt = new eavlWorldTextAnnotation(window,"Test 2D world text, [] height=0.05 at (0.3,0.3)",
+                                             eavlColor::white, .05,
+                                             0.3, 0.3, 0,
+                                             0,0,-1,   0,1,0);
+            //tt->SetAnchor(.5,.5);
+            break;
+          case 2:
+            tt = new eavlScreenTextAnnotation(window,"Test 2D text, [] height=0.05 centered with top anchor at 0.9y",
+                                              eavlColor::white, .05,
+                                              0, 0.9);
+            tt->SetAnchor(.5,1);
+            break;
+          case 3:
+            tt = new eavlBillboardTextAnnotation(window,"Test 2D text, [] height=0.05 screen space at (.3,.3)",
+                                                 eavlColor::white, .05,
+                                                 0.3, 0.3, 0.0, true);
+            //tt->SetAnchor(.5,0);
+            break;
+          case 4:
+            tt = new eavlBillboardTextAnnotation(window,"Test 2D text, [] height=0.05 world space at (.3,.3)",
+                                                 eavlColor::white, .05,
+                                                 0.3, 0.3, 0.0, false);
+            tt->SetAnchor(0,0);
+            break;
+        }
     }
     glDisable(GL_DEPTH_TEST);
     tt->Setup(view);
     tt->Render();
+    ///\todo: hack: should SetMatrices maybe do this?
+    glViewport(0,0,view.w,view.h);
+#endif
+
 
     view.SetMatricesForScreen();
     float vl, vr, vt, vb;
@@ -278,7 +313,7 @@ EL2DWindow::paintGL()
     frame->Render();
 
     haxis->SetScreenPosition(vl,vb, vr,vb);
-    haxis->SetRange(view.view2d.l, view.view2d.r);
+    haxis->SetRangeForAutoTicks(view.view2d.l, view.view2d.r);
     haxis->SetMajorTickSize(0, .05, 1.0);
     haxis->SetMinorTickSize(0, .02, 1.0);
     haxis->SetLabelAnchor(0.5, 1.0);
@@ -286,7 +321,7 @@ EL2DWindow::paintGL()
     haxis->Render();
 
     vaxis->SetScreenPosition(vl,vb, vl,vt);
-    vaxis->SetRange(view.view2d.b, view.view2d.t);
+    vaxis->SetRangeForAutoTicks(view.view2d.b, view.view2d.t);
     vaxis->SetMajorTickSize(.05 / view.aspect, 0, 1.0);
     vaxis->SetMinorTickSize(.02 / view.aspect, 0, 1.0);
     vaxis->SetLabelAnchor(1.0, 0.47);

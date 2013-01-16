@@ -256,9 +256,15 @@ EL3DWindow::paintGL()
     // sets up the texture we need for the plots....
     // (no, that is not a good thing, we should
     // fix that....)
-    colorbar->SetColorTable(plots[0].colortable);
-    colorbar->Setup(view);
-    colorbar->Render();
+    if (plots[0].pcRenderer)
+    {
+        double vmin, vmax;
+        ((eavlPseudocolorRenderer*)(plots[0].pcRenderer))->GetLimits(vmin, vmax);
+        colorbar->SetRange(vmin, vmax, 5);
+        colorbar->SetColorTable(plots[0].colortable);
+        colorbar->Setup(view);
+        colorbar->Render();
+    }
 
     window->Paint();
 
@@ -268,24 +274,24 @@ EL3DWindow::paintGL()
     static eavlTextAnnotation *t1=NULL,*t1b=NULL,*t1c=NULL, *t2=NULL,*t3=NULL,*t3b=NULL, *t4=NULL,*t4b=NULL;
     if (!t1)
     {
-        t1 = new eavlScreenTextAnnotation(window,"Test 2D text, [] height=0.03 near upper-left corner (.1,.9)",
-                                          eavlColor::white, .03,
-                                          0.1, 0.9);
-        t1b = new eavlScreenTextAnnotation(window,"Test 2D text, [] height=0.03 at (.1,.87) should be immediately below other 2D text",
-                                           eavlColor::white, .03,
-                                           0.1, 0.87);
-        t1c = new eavlScreenTextAnnotation(window,"Test 2D text, [] height=0.03 at (.1,.1) oriented at 90 degrees",
-                                           eavlColor::white, .03,
-                                           0.1, 0.1, 90.);
+        t1 = new eavlScreenTextAnnotation(window,"Test 2D text, [] height=0.05 near upper-left corner (-.9,.9)",
+                                          eavlColor::white, .05,
+                                          -.9, 0.9);
+        t1b = new eavlScreenTextAnnotation(window,"Test 2D text, [] height=0.05 at (-.9,.85) should be immediately below other 2D text",
+                                           eavlColor::white, .05,
+                                           -.9, 0.85);
+        t1c = new eavlScreenTextAnnotation(window,"Test 2D text, [] height=0.05 at (-.9,-.9) oriented at 90 degrees",
+                                           eavlColor::white, .05,
+                                           -.9,-.9, 90.);
         t2 = new eavlWorldTextAnnotation(window,"Test 3D text (You), height=1.0 in 3D space at (-5,0,0), diagonal along X=Z, Y=up",
                                          eavlColor::white,
                                          1.0,
                                          -5,0,0,
                                          1,0,-1,
                                          0,1,0);
-        t3 = new eavlBillboardTextAnnotation(window,"Test 3D billboard text, height=0.03 in screen space at (0,5,0)",
+        t3 = new eavlBillboardTextAnnotation(window,"Test 3D billboard text, height=0.05 in screen space at (0,5,0)",
                                     eavlColor::white,
-                                    .03,
+                                    .05,
                                     0,5,0, true);
         t3b = new eavlBillboardTextAnnotation(window,"Test 3D billboard text, height=1.0 in 3D space at (0,-12,0)",
                                     eavlColor::white,
@@ -294,7 +300,7 @@ EL3DWindow::paintGL()
 
         t4 = new eavlBillboardTextAnnotation(window,"Test 3D billboard text, height in screen space at 90deg",
                                              eavlColor::white,
-                                             .03,
+                                             .05,
                                              0,5,0, true, 90.0);
         t4b = new eavlBillboardTextAnnotation(window,"Test 3D billboard text, height in 3D space at 90deg",
                                               eavlColor::white,
@@ -348,8 +354,13 @@ EL3DWindow::paintGL()
     bool xtest = (viewdir * eavlVector3(1,0,0)) >= 0;
     bool ytest = (viewdir * eavlVector3(0,1,0)) >= 0;
     bool ztest = (viewdir * eavlVector3(0,0,1)) >= 0;
-    xtest = !xtest;
-    ytest = !ytest;
+
+    bool outsideedges = true; // if false, do closesttriad
+    if (outsideedges)
+    {
+        xtest = !xtest;
+        ytest = !ytest;
+    }
 
     xaxis->SetAxis(0);
     xaxis->SetTickInvert(xtest,ytest,ztest);
@@ -381,8 +392,11 @@ EL3DWindow::paintGL()
     yaxis->Setup(view);
     yaxis->Render();
 
-    //xtest = !xtest;
-    ytest = !ytest;
+    if (outsideedges)
+    {
+        //xtest = !xtest;
+        ytest = !ytest;
+    }
     zaxis->SetAxis(2);
     zaxis->SetTickInvert(xtest,ytest,ztest);
     zaxis->SetWorldPosition(xtest ? view.minextents[0] : view.maxextents[0],
@@ -399,6 +413,18 @@ EL3DWindow::paintGL()
     zaxis->Render();
 
     glDepthRange(0,1);
+
+    ///\todo: hack: render the colorbar again on top of the plots
+    /// this is silly; we need to render 2D annotations with 
+    /// depth, or simply render them last (which we generally do),
+    /// but in the case of the color bar we're still counting on
+    /// it to set up the texture....
+    if (plots[0].pcRenderer)
+    {
+        colorbar->Setup(view);
+        colorbar->Render();
+        glEnable(GL_DEPTH_TEST);
+    }
 }
 
 // ****************************************************************************
