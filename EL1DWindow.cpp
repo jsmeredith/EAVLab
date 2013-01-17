@@ -37,6 +37,7 @@ EL1DWindow::EL1DWindow(ELWindowManager *parent)
     lastx = lasty = -1;
     showghosts = false;
     showmesh = false;
+    barstyle = false;
 
     view.viewtype = eavlView::EAVL_VIEW_2D;
     view.vl = -.7;
@@ -57,7 +58,6 @@ EL1DWindow::EL1DWindow(ELWindowManager *parent)
         p.data = NULL;
         p.colortable = "dense";
         p.variable_fieldindex = -1;
-        p.curveRenderer = NULL;
         plots.push_back(p);
     }
 }
@@ -91,6 +91,9 @@ EL1DWindow::PipelineUpdated(int index, Pipeline *pipe)
     if (p.curveRenderer)
         delete p.curveRenderer;
     p.curveRenderer = NULL;
+    if (p.barRenderer)
+        delete p.barRenderer;
+    p.barRenderer = NULL;
 
     UpdatePlots();
     ResetView();
@@ -165,11 +168,18 @@ EL1DWindow::UpdatePlots()
             continue;
         shoulddraw = true;
 
-        if (!p.curveRenderer && p.variable_fieldindex >= 0)
+        if (!barstyle && !p.curveRenderer && p.variable_fieldindex >= 0)
         {
             p.curveRenderer = new eavlCurveRenderer(p.data, 
                                                     eavlColor(0,.7,0),
                                                     p.data->GetField(p.variable_fieldindex)->GetArray()->GetName());
+        }
+        if (barstyle && !p.barRenderer && p.variable_fieldindex >= 0)
+        {
+            p.barRenderer = new eavlBarRenderer(p.data, 
+                                                eavlColor(0,.7,0),
+                                                .10, // gap is 10% of bar width
+                                                p.data->GetField(p.variable_fieldindex)->GetArray()->GetName());
         }
 
         window->plots.push_back(p);
@@ -462,8 +472,8 @@ EL1DWindow::GetSettings()
     if (!settings)
     {
         settings = new EL1DWindowSettings;
-        connect(settings, SIGNAL(ColorTableChanged(const QString&)),
-                this, SLOT(SettingsColorTableChanged(const QString&)));
+        connect(settings, SIGNAL(StyleChanged(const QString&)),
+                this, SLOT(SettingsStyleChanged(const QString&)));
         connect(settings, SIGNAL(VarChanged(const QString&)),
                 this, SLOT(SettingsVarChanged(const QString&)));
     }
@@ -485,10 +495,18 @@ EL1DWindow::GetSettings()
 // Modifications:
 // ****************************************************************************
 void
-EL1DWindow::SettingsColorTableChanged(const QString &ct)
+EL1DWindow::SettingsStyleChanged(const QString &style)
 {
     ///\todo: just prototyping; only affect plot 0
-    plots[0].colortable = ct.toStdString();
+    for (unsigned int i=0;  i<plots.size(); i++)
+    {
+        eavlPlot &p = plots[i];
+        delete p.curveRenderer;
+        p.curveRenderer = NULL;
+        delete p.barRenderer;
+        p.barRenderer = NULL;
+    }
+    barstyle = (style == "Bars");
     updateGL();
 }
 
@@ -516,6 +534,8 @@ EL1DWindow::SettingsVarChanged(const QString &var)
     eavlPlot &p = plots[0];
     delete p.curveRenderer;
     p.curveRenderer = NULL;
+    delete p.barRenderer;
+    p.barRenderer = NULL;
     p.variable_fieldindex = -1;
     p.cellset_index = -1;
     if (p.data)

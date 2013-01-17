@@ -19,6 +19,7 @@
 
 #include "ExternalFaceOperation.h"
 #include "IsosurfaceOperation.h"
+#include "HistogramOperation.h"
 #include "SurfaceNormalsOperation.h"
 #include "TransformOperation.h"
 
@@ -74,6 +75,7 @@ ELPipelineBuilder::ELPipelineBuilder(QWidget *parent)
     const char *operations[] = {
         "Isosurface",
         "ExternalFace",
+        "Histogram",
         "SurfaceNormals",
         "Transform",
         NULL
@@ -233,6 +235,8 @@ ELPipelineBuilder::newOperation()
         pipeline->ops.push_back(new IsosurfaceOperation);
     else if (actionname == "ExternalFace")
         pipeline->ops.push_back(new ExternalFaceOperation);
+    else if (actionname == "Histogram")
+        pipeline->ops.push_back(new HistogramOperation);
     else if (actionname == "SurfaceNormals")
         pipeline->ops.push_back(new SurfaceNormalsOperation);
     else if (actionname == "Transform")

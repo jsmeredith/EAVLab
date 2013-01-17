@@ -38,16 +38,13 @@ class EL1DWindowSettings : public QWidget
     {
         QGridLayout *topLayout = new QGridLayout(this);
 
-        QComboBox *ctCombo = new QComboBox(this);
-        ctCombo->addItem("dense");
-        ctCombo->addItem("sharp");
-        ctCombo->addItem("blue");
-        ctCombo->addItem("orange");
-        ctCombo->addItem("levels");
-        topLayout->addWidget(new QLabel("Color Table:", this), 0,0);
-        topLayout->addWidget(ctCombo, 1,0);
-        connect(ctCombo, SIGNAL(activated(const QString&)),
-                this, SIGNAL(ColorTableChanged(const QString&)));
+        QComboBox *styleCombo = new QComboBox(this);
+        styleCombo->addItem("Curves");
+        styleCombo->addItem("Bars");
+        topLayout->addWidget(new QLabel("Style:", this), 0,0);
+        topLayout->addWidget(styleCombo, 1,0);
+        connect(styleCombo, SIGNAL(activated(const QString&)),
+                this, SIGNAL(StyleChanged(const QString&)));
 
         varCombo = new QComboBox(this);
         connect(varCombo, SIGNAL(activated(const QString&)),
@@ -74,7 +71,7 @@ class EL1DWindowSettings : public QWidget
         emit VarChanged(varCombo->currentText());
     }
   signals:
-    void ColorTableChanged(const QString &);
+    void StyleChanged(const QString &);
     void VarChanged(const QString &);
 };
 
@@ -126,6 +123,7 @@ class EL1DWindow : public QGLWidget
     int        lastx, lasty;
     bool       showghosts;
     bool       showmesh;
+    bool       barstyle;
 
     eavlWindow *window;
     eavl2DAxisAnnotation *haxis, *vaxis;
@@ -141,7 +139,7 @@ class EL1DWindow : public QGLWidget
     void ResetView();
     bool UpdatePlots();
 
-    void SettingsColorTableChanged(const QString&);
+    void SettingsStyleChanged(const QString&);
     void SettingsVarChanged(const QString&);
 };
 
