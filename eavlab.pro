@@ -14,6 +14,7 @@ SOURCES += main.cpp\
     ELWindowManager.cpp \
     ELEmptyWindow.cpp \
     ELWindowFrame.cpp \
+    EL1DWindow.cpp \
     EL2DWindow.cpp \
     EL3DWindow.cpp \
     ELBasicInfoWindow.cpp \

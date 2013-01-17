@@ -232,7 +232,7 @@ void
 EL3DWindow::paintGL()
 {
     //cerr << "EL3DWindow::paintGL\n";
-    glClearColor(0.0, 0.15, 0.3, 1.0);
+    glClearColor(0.2, 0.0, 0.3, 1.0);
     glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
     bool shoulddraw = UpdatePlots();
@@ -260,6 +260,7 @@ EL3DWindow::paintGL()
     {
         double vmin, vmax;
         ((eavlPseudocolorRenderer*)(plots[0].pcRenderer))->GetLimits(vmin, vmax);
+        colorbar->SetAxisColor(eavlColor::white);
         colorbar->SetRange(vmin, vmax, 5);
         colorbar->SetColorTable(plots[0].colortable);
         colorbar->Setup(view);
@@ -334,6 +335,7 @@ EL3DWindow::paintGL()
     t4b->Render();
 #endif
 
+    bbox->SetColor(eavlColor(.3,.3,.3));
     bbox->SetExtents(view.minextents[0],
                      view.maxextents[0],
                      view.minextents[1],
@@ -363,6 +365,7 @@ EL3DWindow::paintGL()
     }
 
     xaxis->SetAxis(0);
+    xaxis->SetColor(eavlColor::white);
     xaxis->SetTickInvert(xtest,ytest,ztest);
     xaxis->SetWorldPosition(view.minextents[0],
                             ytest ? view.minextents[1] : view.maxextents[1],
@@ -378,6 +381,7 @@ EL3DWindow::paintGL()
     xaxis->Render();
 
     yaxis->SetAxis(1);
+    yaxis->SetColor(eavlColor::white);
     yaxis->SetTickInvert(xtest,ytest,ztest);
     yaxis->SetWorldPosition(xtest ? view.minextents[0] : view.maxextents[0],
                             view.minextents[1],
@@ -398,6 +402,7 @@ EL3DWindow::paintGL()
         ytest = !ytest;
     }
     zaxis->SetAxis(2);
+    zaxis->SetColor(eavlColor::white);
     zaxis->SetTickInvert(xtest,ytest,ztest);
     zaxis->SetWorldPosition(xtest ? view.minextents[0] : view.maxextents[0],
                             ytest ? view.minextents[1] : view.maxextents[1],

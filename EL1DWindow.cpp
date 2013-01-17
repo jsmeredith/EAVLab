@@ -1,5 +1,5 @@
 // Copyright 2012-2013 UT-Battelle, LLC.  See LICENSE.txt for more information.
-#include "EL2DWindow.h"
+#include "EL1DWindow.h"
 
 #include <QMouseEvent>
 #include <QToolBar>
@@ -14,21 +14,20 @@
 #include <eavlPNGImporter.h>
 #include <eavlTexture.h>
 #include <eavlTextAnnotation.h>
-#include <eavlColorBarAnnotation.h>
 #include <eavl2DAxisAnnotation.h>
 #include <eavl2DFrameAnnotation.h>
 
 #include <cfloat>
 
 // ****************************************************************************
-// Constructor:  EL2DWindow::EL2DWindow
+// Constructor:  EL1DWindow::EL1DWindow
 //
 // Programmer:  Jeremy Meredith
-// Creation:    August 16, 2012
+// Creation:    January 17, 2013
 //
 // Modifications:
 // ****************************************************************************
-EL2DWindow::EL2DWindow(ELWindowManager *parent)
+EL1DWindow::EL1DWindow(ELWindowManager *parent)
     : QGLWidget(parent)
 {
     settings = NULL;
@@ -44,8 +43,7 @@ EL2DWindow::EL2DWindow(ELWindowManager *parent)
     view.vr = +.7;
     view.vb = -.7;
     view.vt = +.7;
-    window = new eavl2DGLWindow(view);
-    colorbar = new eavlColorBarAnnotation(window);
+    window = new eavl1DGLWindow(view);
     haxis = new eavl2DAxisAnnotation(window);
     vaxis = new eavl2DAxisAnnotation(window);
     frame = new eavl2DFrameAnnotation(window);
@@ -59,15 +57,14 @@ EL2DWindow::EL2DWindow(ELWindowManager *parent)
         p.data = NULL;
         p.colortable = "dense";
         p.variable_fieldindex = -1;
-        p.pcRenderer = NULL;
-        p.meshRenderer = NULL;
+        p.curveRenderer = NULL;
         plots.push_back(p);
     }
 }
 
 
 // ****************************************************************************
-// Method:  EL2DWindow::SetPipeline
+// Method:  EL1DWindow::SetPipeline
 //
 // Purpose:
 ///   Set the pipeline this window is showing.
@@ -77,12 +74,12 @@ EL2DWindow::EL2DWindow(ELWindowManager *parent)
 //   p          the pipeline to show
 //
 // Programmer:  Jeremy Meredith
-// Creation:    August 16, 2012
+// Creation:    January 17, 2013
 //
 // Modifications:
 // ****************************************************************************
 void
-EL2DWindow::PipelineUpdated(int index, Pipeline *pipe)
+EL1DWindow::PipelineUpdated(int index, Pipeline *pipe)
 {
     eavlPlot &p = plots[index];
 
@@ -91,12 +88,9 @@ EL2DWindow::PipelineUpdated(int index, Pipeline *pipe)
 
     p.data = pipe->result;
 
-    if (p.pcRenderer)
-        delete p.pcRenderer;
-    p.pcRenderer = NULL;
-    if (p.meshRenderer)
-        delete p.meshRenderer;
-    p.meshRenderer = NULL;
+    if (p.curveRenderer)
+        delete p.curveRenderer;
+    p.curveRenderer = NULL;
 
     UpdatePlots();
     ResetView();
@@ -105,7 +99,7 @@ EL2DWindow::PipelineUpdated(int index, Pipeline *pipe)
 }
 
 // ****************************************************************************
-// Method:  EL2DWindow::CurrentPipelineChanged
+// Method:  EL1DWindow::CurrentPipelineChanged
 //
 // Purpose:
 ///   Tell this window what the currently-edited pipeline index is.
@@ -114,12 +108,12 @@ EL2DWindow::PipelineUpdated(int index, Pipeline *pipe)
 //   index      the new pipeline being edited
 //
 // Programmer:  Jeremy Meredith
-// Creation:    August 16, 2012
+// Creation:    January 17, 2013
 //
 // Modifications:
 // ****************************************************************************
 void
-EL2DWindow::CurrentPipelineChanged(int index)
+EL1DWindow::CurrentPipelineChanged(int index)
 {
     currentPipeline = index;
     UpdatePlots();
@@ -129,7 +123,7 @@ EL2DWindow::CurrentPipelineChanged(int index)
 
 
 // ****************************************************************************
-// Method:  EL2DWindow::initializeGL
+// Method:  EL1DWindow::initializeGL
 //
 // Purpose:
 ///   QGLWidget method for initializing various OpenGL things.
@@ -138,12 +132,12 @@ EL2DWindow::CurrentPipelineChanged(int index)
 //   none
 //
 // Programmer:  Jeremy Meredith
-// Creation:    August 16, 2012
+// Creation:    January 17, 2013
 //
 // Modifications:
 // ****************************************************************************
 void
-EL2DWindow::initializeGL()
+EL1DWindow::initializeGL()
 {
     //makeCurrent();
     window->Initialize();
@@ -151,7 +145,7 @@ EL2DWindow::initializeGL()
 
 
 bool
-EL2DWindow::UpdatePlots()
+EL1DWindow::UpdatePlots()
 {
     //cerr << "EL3DWindow::UpdatePlots\n";
     bool shoulddraw = false;
@@ -171,16 +165,11 @@ EL2DWindow::UpdatePlots()
             continue;
         shoulddraw = true;
 
-        if (!p.pcRenderer && p.variable_fieldindex >= 0)
+        if (!p.curveRenderer && p.variable_fieldindex >= 0)
         {
-            p.pcRenderer = new eavlPseudocolorRenderer(p.data, 
-                                                       p.colortable,
-                                                       p.data->GetField(p.variable_fieldindex)->GetArray()->GetName());
-        }
-        if (!p.meshRenderer)
-        {
-            p.meshRenderer = new eavlSingleColorRenderer(p.data, 
-                                                         eavlColor::white);
+            p.curveRenderer = new eavlCurveRenderer(p.data, 
+                                                    eavlColor(0,.7,0),
+                                                    p.data->GetField(p.variable_fieldindex)->GetArray()->GetName());
         }
 
         window->plots.push_back(p);
@@ -190,7 +179,7 @@ EL2DWindow::UpdatePlots()
 
 
 // ****************************************************************************
-// Method:  EL2DWindow::ResetView
+// Method:  EL1DWindow::ResetView
 //
 // Purpose:
 ///   Sets up the camera based on the current pipelines.
@@ -199,19 +188,21 @@ EL2DWindow::UpdatePlots()
 //   w,h        new width, height
 //
 // Programmer:  Jeremy Meredith
-// Creation:    August 16, 2012
+// Creation:    January 17, 2013
 //
 // Modifications:
 // ****************************************************************************
 void
-EL2DWindow::ResetView()
+EL1DWindow::ResetView()
 {
+    //cerr << "EL1DWindow::ResetView\n";
+    UpdatePlots();
     window->ResetView();
     updateGL();
 }
 
 // ****************************************************************************
-// Method:  EL2DWindow::paintGL
+// Method:  EL1DWindow::paintGL
 //
 // Purpose:
 ///   QGLWidget method for when the window needs to be painter.
@@ -221,7 +212,7 @@ EL2DWindow::ResetView()
 //   none
 //
 // Programmer:  Jeremy Meredith
-// Creation:    August 16, 2012
+// Creation:    January 17, 2013
 //
 // Modifications:
 //   Jeremy Meredith, Thu Nov 29 12:19:33 EST 2012
@@ -229,9 +220,9 @@ EL2DWindow::ResetView()
 //
 // ****************************************************************************
 void
-EL2DWindow::paintGL()
+EL1DWindow::paintGL()
 {
-    glClearColor(0.0, 0.15, 0.3, 1.0);
+    glClearColor(1,1,1, 1.0);
     glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
     bool shoulddraw = UpdatePlots();
@@ -249,60 +240,7 @@ EL2DWindow::paintGL()
     if (!shoulddraw)
         return;
 
-    // okay, we think it's safe to proceed now!
-    if (plots[0].pcRenderer)
-    {
-        double vmin, vmax;
-        ((eavlPseudocolorRenderer*)(plots[0].pcRenderer))->GetLimits(vmin, vmax);
-        colorbar->SetAxisColor(eavlColor::white);
-        colorbar->SetRange(vmin, vmax, 5);
-        colorbar->SetColorTable(plots[0].colortable);
-        colorbar->Setup(view);
-        colorbar->Render();
-    }
-
     window->Paint();
-
-    // test of font rendering
-#if 0
-    static eavlTextAnnotation *tt=NULL;
-    if (!tt)
-    {
-        switch (4)
-        {
-          case 1:
-            tt = new eavlWorldTextAnnotation(window,"Test 2D world text, [] height=0.05 at (0.3,0.3)",
-                                             eavlColor::white, .05,
-                                             0.3, 0.3, 0,
-                                             0,0,-1,   0,1,0);
-            //tt->SetAnchor(.5,.5);
-            break;
-          case 2:
-            tt = new eavlScreenTextAnnotation(window,"Test 2D text, [] height=0.05 centered with top anchor at 0.9y",
-                                              eavlColor::white, .05,
-                                              0, 0.9);
-            tt->SetAnchor(.5,1);
-            break;
-          case 3:
-            tt = new eavlBillboardTextAnnotation(window,"Test 2D text, [] height=0.05 screen space at (.3,.3)",
-                                                 eavlColor::white, .05,
-                                                 0.3, 0.3, 0.0, true);
-            //tt->SetAnchor(.5,0);
-            break;
-          case 4:
-            tt = new eavlBillboardTextAnnotation(window,"Test 2D text, [] height=0.05 world space at (.3,.3)",
-                                                 eavlColor::white, .05,
-                                                 0.3, 0.3, 0.0, false);
-            tt->SetAnchor(0,0);
-            break;
-        }
-    }
-    glDisable(GL_DEPTH_TEST);
-    tt->Setup(view);
-    tt->Render();
-    ///\todo: hack: should SetMatrices maybe do this?
-    glViewport(0,0,view.w,view.h);
-#endif
 
     glDisable(GL_DEPTH_TEST);
 
@@ -312,10 +250,10 @@ EL2DWindow::paintGL()
 
     frame->Setup(view);
     frame->SetExtents(vl,vr, vb,vt);
-    frame->SetColor(eavlColor(.7,.7,.7));
+    frame->SetColor(eavlColor(.5,.5,.5));
     frame->Render();
 
-    haxis->SetColor(eavlColor::white);
+    haxis->SetColor(eavlColor::black);
     haxis->SetScreenPosition(vl,vb, vr,vb);
     haxis->SetRangeForAutoTicks(view.view2d.l, view.view2d.r);
     haxis->SetMajorTickSize(0, .05, 1.0);
@@ -324,7 +262,7 @@ EL2DWindow::paintGL()
     haxis->Setup(view);
     haxis->Render();
 
-    vaxis->SetColor(eavlColor::white);
+    vaxis->SetColor(eavlColor::black);
     vaxis->SetScreenPosition(vl,vb, vl,vt);
     vaxis->SetRangeForAutoTicks(view.view2d.b, view.view2d.t);
     vaxis->SetMajorTickSize(.05 / view.aspect, 0, 1.0);
@@ -337,7 +275,7 @@ EL2DWindow::paintGL()
 }
 
 // ****************************************************************************
-// Method:  EL2DWindow::resizeGL
+// Method:  EL1DWindow::resizeGL
 //
 // Purpose:
 ///   QGLWidget method for when the window is created or resized.
@@ -347,12 +285,12 @@ EL2DWindow::paintGL()
 //   w,h        new width, height
 //
 // Programmer:  Jeremy Meredith
-// Creation:    August 16, 2012
+// Creation:    January 17, 2013
 //
 // Modifications:
 // ****************************************************************************
 void
-EL2DWindow::resizeGL(int w, int h)
+EL1DWindow::resizeGL(int w, int h)
 {
     view.w = w;
     view.h = h;
@@ -361,7 +299,7 @@ EL2DWindow::resizeGL(int w, int h)
 }
 
 // ****************************************************************************
-// Method:  EL2DWindow::mousePressEvent
+// Method:  EL1DWindow::mousePressEvent
 //
 // Purpose:
 ///   Mouse button is now down; start interaction.
@@ -370,12 +308,12 @@ EL2DWindow::resizeGL(int w, int h)
 //   mev        the mouse event
 //
 // Programmer:  Jeremy Meredith
-// Creation:    August 15, 2012
+// Creation:    January 17, 2013
 //
 // Modifications:
 // ****************************************************************************
 void
-EL2DWindow::mousePressEvent(QMouseEvent *mev)
+EL1DWindow::mousePressEvent(QMouseEvent *mev)
 {
     shiftKey = (mev->modifiers() & Qt::ShiftModifier);
     makeCurrent();
@@ -387,7 +325,7 @@ EL2DWindow::mousePressEvent(QMouseEvent *mev)
 }
 
 // ****************************************************************************
-// Method:  EL2DWindow::mouseMoveEvent
+// Method:  EL1DWindow::mouseMoveEvent
 //
 // Purpose:
 ///   Mouse is moved (while mouse is down).  Change camera.
@@ -396,12 +334,12 @@ EL2DWindow::mousePressEvent(QMouseEvent *mev)
 //   mev        the mouse event
 //
 // Programmer:  Jeremy Meredith
-// Creation:    August 15, 2012
+// Creation:    January 17, 2013
 //
 // Modifications:
 // ****************************************************************************
 void
-EL2DWindow::mouseMoveEvent(QMouseEvent *mev)
+EL1DWindow::mouseMoveEvent(QMouseEvent *mev)
 {
     makeCurrent();
 
@@ -433,107 +371,17 @@ EL2DWindow::mouseMoveEvent(QMouseEvent *mev)
         }
         else if (mev->buttons() & Qt::MidButton)
         {
-            /* simple code, fixed viewport:
-            double zoom = y2 - y1;
-            double factor = pow(4., zoom);
-            double xc = (view.view2d.l + view.view2d.r) / 2.;
-            double yc = (view.view2d.b + view.view2d.t) / 2.;
-            double xs = (view.view2d.r - view.view2d.l);
-            double ys = (view.view2d.t - view.view2d.b);
-            xs /= factor;
-            ys /= factor;
-            view.view2d.l = xc - .5*xs;
-            view.view2d.r = xc + .5*xs;
-            view.view2d.b = yc - .5*ys;
-            view.view2d.t = yc + .5*ys;*/
-
             double zoom = y2 - y1;
             double factor = pow(4., zoom);
             double xc = (view.view2d.l + view.view2d.r) / 2.;
             double yc = (view.view2d.b + view.view2d.t) / 2.;
             double xs = (view.view2d.r - view.view2d.l) / 2.;
             double ys = (view.view2d.t - view.view2d.b) / 2.;
-            // If we're zooming in, we first want to expand the
-            // viewport if possible before actually having to pull
-            // the x/y region in.  We accomplish expanding the
-            // viewport the horizontal/vertical direction by
-            // (respectively) pulling in the y/x limits while
-            // leaving the x/y limits alone.  (Or at least leaving
-            // the x/y limits as large as possible.)
-            double allowed_x_expansion = (view.vr - view.vl) / (vr-vl);
-            double allowed_y_expansion = (view.vt - view.vb) / (vt-vb);
 
-            /*
-            cerr << "allowx = "<<allowed_x_expansion<<endl;
-            cerr << "allowy = "<<allowed_y_expansion<<endl;
-            cerr << "factor = "<<factor<<endl;
-            cerr << endl;
-            */
-
-            if (zoom > 0 && allowed_x_expansion>1.01)
-            {
-                // not using this:
-                //double xfactor = factor;
-                //if (allowed_x_expansion > xfactor)
-                //    xfactor = 1;
-                //else
-                //    xfactor /= allowed_x_expansion;
-
-                bool in_l = xc - xs/factor < view.minextents[0];
-                bool in_r = xc + xs/factor > view.maxextents[0];
-                if (in_l && in_r)
-                {
-                    view.view2d.l = xc - xs/factor;
-                    view.view2d.r = xc + xs/factor;
-                }
-                else if (in_l)
-                {
-                    view.view2d.l = xc - xs/(factor*factor);
-                }
-                else if (in_r)
-                {
-                    view.view2d.r = xc + xs/(factor*factor);
-                }
-
-                view.view2d.b = yc - ys/factor;
-                view.view2d.t = yc + ys/factor;
-            }
-            else if (zoom > 0 && allowed_y_expansion>1.01)
-            {
-                // not using this:
-                //double yfactor = factor;
-                //if (allowed_y_expansion > yfactor)
-                //    yfactor = 1;
-                //else
-                //    yfactor /= allowed_y_expansion;
-
-                bool in_b = yc - ys/factor < view.minextents[1];
-                bool in_t = yc + ys/factor > view.maxextents[1];
-                if (in_b && in_t)
-                {
-                    view.view2d.b = yc - ys/factor;
-                    view.view2d.t = yc + ys/factor;
-                }
-                else if (in_b)
-                {
-                    view.view2d.b = yc - ys/(factor*factor);
-                }
-                else if (in_t)
-                {
-                    view.view2d.t = yc + ys/(factor*factor);
-                }
-
-                view.view2d.l = xc - xs/factor;
-                view.view2d.r = xc + xs/factor;
-            }
-            else
-            {
-                view.view2d.l = xc - xs/factor;
-                view.view2d.r = xc + xs/factor;
-                view.view2d.b = yc - ys/factor;
-                view.view2d.t = yc + ys/factor;
-            }
-
+            view.view2d.l = xc - xs/factor;
+            view.view2d.r = xc + xs/factor;
+            view.view2d.b = yc - ys/factor;
+            view.view2d.t = yc + ys/factor;
         }
         // No: we want a popup menu instead!
         //else if (mev->buttons() & Qt::RightButton)
@@ -548,7 +396,7 @@ EL2DWindow::mouseMoveEvent(QMouseEvent *mev)
 }
 
 // ****************************************************************************
-// Method:  EL2DWindow::mouseReleaseEvent
+// Method:  EL1DWindow::mouseReleaseEvent
 //
 // Purpose:
 ///   Mouse button is no longer down; finish interaction.
@@ -557,12 +405,12 @@ EL2DWindow::mouseMoveEvent(QMouseEvent *mev)
 //   mev        the mouse event
 //
 // Programmer:  Jeremy Meredith
-// Creation:    August 15, 2012
+// Creation:    January 17, 2013
 //
 // Modifications:
 // ****************************************************************************
 void
-EL2DWindow::mouseReleaseEvent(QMouseEvent *)
+EL1DWindow::mouseReleaseEvent(QMouseEvent *)
 {
     makeCurrent();
 
@@ -573,7 +421,7 @@ EL2DWindow::mouseReleaseEvent(QMouseEvent *)
 
 
 // ****************************************************************************
-// Method:  EL2DWindow::watchedPipelinesChanged
+// Method:  EL1DWindow::watchedPipelinesChanged
 //
 // Purpose:
 ///   Change which pipelines this window should watch.
@@ -582,19 +430,19 @@ EL2DWindow::mouseReleaseEvent(QMouseEvent *)
 //   watched    the new vector of size NUMPIPES+1 for new pipelines watch set
 //
 // Programmer:  Jeremy Meredith
-// Creation:    August 16, 2012
+// Creation:    January 17, 2013
 //
 // Modifications:
 // ****************************************************************************
 void
-EL2DWindow::watchedPipelinesChanged(vector<bool> watched)
+EL1DWindow::watchedPipelinesChanged(vector<bool> watched)
 {
     watchedPipelines = watched;
     updateGL();
 }
 
 // ****************************************************************************
-// Method:  EL2DWindow::GetSettings
+// Method:  EL1DWindow::GetSettings
 //
 // Purpose:
 ///   Return the settings for this window, creating and connecting
@@ -604,16 +452,16 @@ EL2DWindow::watchedPipelinesChanged(vector<bool> watched)
 //   none
 //
 // Programmer:  Jeremy Meredith
-// Creation:    August 16, 2012
+// Creation:    January 17, 2013
 //
 // Modifications:
 // ****************************************************************************
 QWidget *
-EL2DWindow::GetSettings()
+EL1DWindow::GetSettings()
 {
     if (!settings)
     {
-        settings = new EL2DWindowSettings;
+        settings = new EL1DWindowSettings;
         connect(settings, SIGNAL(ColorTableChanged(const QString&)),
                 this, SLOT(SettingsColorTableChanged(const QString&)));
         connect(settings, SIGNAL(VarChanged(const QString&)),
@@ -623,7 +471,7 @@ EL2DWindow::GetSettings()
 }
 
 // ****************************************************************************
-// Method:  EL2DWindow::SettingsColorTableChanged
+// Method:  EL1DWindow::SettingsColorTableChanged
 //
 // Purpose:
 ///   Slot for when the color table in the settings has changed.
@@ -632,12 +480,12 @@ EL2DWindow::GetSettings()
 //   ct         the new color table name
 //
 // Programmer:  Jeremy Meredith
-// Creation:    August 20, 2012
+// Creation:    January 17, 2013
 //
 // Modifications:
 // ****************************************************************************
 void
-EL2DWindow::SettingsColorTableChanged(const QString &ct)
+EL1DWindow::SettingsColorTableChanged(const QString &ct)
 {
     ///\todo: just prototyping; only affect plot 0
     plots[0].colortable = ct.toStdString();
@@ -645,7 +493,7 @@ EL2DWindow::SettingsColorTableChanged(const QString &ct)
 }
 
 // ****************************************************************************
-// Method:  EL2DWindow::SettingsVarChanged
+// Method:  EL1DWindow::SettingsVarChanged
 //
 // Purpose:
 ///   Slot for when the variable in the settings has changed.
@@ -654,7 +502,7 @@ EL2DWindow::SettingsColorTableChanged(const QString &ct)
 //   var        the new variable name
 //
 // Programmer:  Jeremy Meredith
-// Creation:    August 20, 2012
+// Creation:    January 17, 2013
 //
 // Modifications:
 //   Jeremy Meredith, Thu Nov 29 12:19:56 EST 2012
@@ -662,12 +510,12 @@ EL2DWindow::SettingsColorTableChanged(const QString &ct)
 //
 // ****************************************************************************
 void
-EL2DWindow::SettingsVarChanged(const QString &var)
+EL1DWindow::SettingsVarChanged(const QString &var)
 {
     ///\todo: just prototyping; only affect plot 0
     eavlPlot &p = plots[0];
-    delete p.pcRenderer;
-    p.pcRenderer = NULL;
+    delete p.curveRenderer;
+    p.curveRenderer = NULL;
     p.variable_fieldindex = -1;
     p.cellset_index = -1;
     if (p.data)
@@ -705,5 +553,9 @@ EL2DWindow::SettingsVarChanged(const QString &var)
             }
         }
     }
+
+    ///\todo: HACK
+    ResetView();
+
     updateGL();
 }
