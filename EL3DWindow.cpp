@@ -39,7 +39,6 @@ EL3DWindow::EL3DWindow(ELWindowManager *parent)
     showghosts = false;
     showmesh = false;
 
-    view.viewtype = eavlView::EAVL_VIEW_3D;
     window = new eavl3DGLWindow(view);
     colorbar = new eavlColorBarAnnotation(window);
     bbox = new eavlBoundingBoxAnnotation(window);
@@ -252,21 +251,6 @@ EL3DWindow::paintGL()
 
     // okay, we think it's safe to proceed now!
     
-    // we're doing the color bar first since it
-    // sets up the texture we need for the plots....
-    // (no, that is not a good thing, we should
-    // fix that....)
-    if (plots[0].pcRenderer)
-    {
-        double vmin, vmax;
-        ((eavlPseudocolorRenderer*)(plots[0].pcRenderer))->GetLimits(vmin, vmax);
-        colorbar->SetAxisColor(eavlColor::white);
-        colorbar->SetRange(vmin, vmax, 5);
-        colorbar->SetColorTable(plots[0].colortable);
-        colorbar->Setup(view);
-        colorbar->Render();
-    }
-
     window->Paint();
 
 
@@ -419,16 +403,15 @@ EL3DWindow::paintGL()
 
     glDepthRange(0,1);
 
-    ///\todo: hack: render the colorbar again on top of the plots
-    /// this is silly; we need to render 2D annotations with 
-    /// depth, or simply render them last (which we generally do),
-    /// but in the case of the color bar we're still counting on
-    /// it to set up the texture....
     if (plots[0].pcRenderer)
     {
+        double vmin, vmax;
+        ((eavlPseudocolorRenderer*)(plots[0].pcRenderer))->GetLimits(vmin, vmax);
+        colorbar->SetAxisColor(eavlColor::white);
+        colorbar->SetRange(vmin, vmax, 5);
+        colorbar->SetColorTable(plots[0].colortable);
         colorbar->Setup(view);
         colorbar->Render();
-        glEnable(GL_DEPTH_TEST);
     }
 }
 

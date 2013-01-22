@@ -39,7 +39,6 @@ EL1DWindow::EL1DWindow(ELWindowManager *parent)
     showmesh = false;
     barstyle = false;
 
-    view.viewtype = eavlView::EAVL_VIEW_2D;
     view.vl = -.7;
     view.vr = +.7;
     view.vb = -.7;

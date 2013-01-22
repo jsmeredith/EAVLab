@@ -39,7 +39,6 @@ EL2DWindow::EL2DWindow(ELWindowManager *parent)
     showghosts = false;
     showmesh = false;
 
-    view.viewtype = eavlView::EAVL_VIEW_2D;
     view.vl = -.7;
     view.vr = +.7;
     view.vb = -.7;
@@ -250,16 +249,6 @@ EL2DWindow::paintGL()
         return;
 
     // okay, we think it's safe to proceed now!
-    if (plots[0].pcRenderer)
-    {
-        double vmin, vmax;
-        ((eavlPseudocolorRenderer*)(plots[0].pcRenderer))->GetLimits(vmin, vmax);
-        colorbar->SetAxisColor(eavlColor::white);
-        colorbar->SetRange(vmin, vmax, 5);
-        colorbar->SetColorTable(plots[0].colortable);
-        colorbar->Setup(view);
-        colorbar->Render();
-    }
 
     window->Paint();
 
@@ -333,6 +322,16 @@ EL2DWindow::paintGL()
     vaxis->Setup(view);
     vaxis->Render();
 
+    if (plots[0].pcRenderer)
+    {
+        double vmin, vmax;
+        ((eavlPseudocolorRenderer*)(plots[0].pcRenderer))->GetLimits(vmin, vmax);
+        colorbar->SetAxisColor(eavlColor::white);
+        colorbar->SetRange(vmin, vmax, 5);
+        colorbar->SetColorTable(plots[0].colortable);
+        colorbar->Setup(view);
+        colorbar->Render();
+    }
 
 }
 
