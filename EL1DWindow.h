@@ -12,6 +12,7 @@
 #include <eavlPlot.h>
 
 class eavlWindow;
+class eavlScene;
 class Pipeline;
 class eavlRenderer;
 class eavl2DAxisAnnotation;
@@ -126,6 +127,7 @@ class EL1DWindow : public QGLWidget
     bool       barstyle;
 
     eavlWindow *window;
+    eavlScene *scene;
     eavl2DAxisAnnotation *haxis, *vaxis;
     eavl2DFrameAnnotation *frame;
     eavlView view;

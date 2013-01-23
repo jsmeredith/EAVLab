@@ -12,6 +12,7 @@
 #include <eavlPlot.h>
 
 class eavlWindow;
+class eavlScene;
 class Pipeline;
 class eavlRenderer;
 class eavlColorBarAnnotation;
@@ -128,6 +129,7 @@ class EL3DWindow : public QGLWidget
     bool       showmesh;
 
     eavlWindow *window;
+    eavlScene *scene;
     eavlColorBarAnnotation *colorbar;
     eavlBoundingBoxAnnotation *bbox;
     eavl3DAxisAnnotation *xaxis, *yaxis, *zaxis;

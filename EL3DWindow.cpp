@@ -9,6 +9,7 @@
 #include <eavlColorTable.h>
 #include <eavlRenderer.h>
 #include <eavlWindow.h>
+#include <eavlScene.h>
 #include <eavlBitmapFont.h>
 #include <eavlBitmapFontFactory.h>
 #include <eavlPNGImporter.h>
@@ -39,7 +40,8 @@ EL3DWindow::EL3DWindow(ELWindowManager *parent)
     showghosts = false;
     showmesh = false;
 
-    window = new eavl3DGLWindow(view);
+    window = new eavlWindow(view);
+    scene = new eavl3DGLScene(window, view);
     colorbar = new eavlColorBarAnnotation(window);
     bbox = new eavlBoundingBoxAnnotation(window);
     xaxis = new eavl3DAxisAnnotation(window);
@@ -145,7 +147,7 @@ void
 EL3DWindow::initializeGL()
 {
     //makeCurrent();
-    window->Initialize();
+    scene->Initialize();
 }
 
 bool
@@ -153,7 +155,7 @@ EL3DWindow::UpdatePlots()
 {
     //cerr << "EL3DWindow::UpdatePlots\n";
     bool shoulddraw = false;
-    window->plots.clear();
+    scene->plots.clear();
     for (unsigned int i=0;  i<plots.size(); i++)
     {
         bool watchingCurrent = watchedPipelines[0];
@@ -181,7 +183,7 @@ EL3DWindow::UpdatePlots()
                                                          eavlColor::white);
         }
 
-        window->plots.push_back(p);
+        scene->plots.push_back(p);
     }
     return shoulddraw;
 }
@@ -205,7 +207,7 @@ EL3DWindow::ResetView()
 {
     //cerr << "EL3DWindow::ResetView\n";
     UpdatePlots();
-    window->ResetView();
+    scene->ResetView();
     updateGL();
 }
 
@@ -251,7 +253,7 @@ EL3DWindow::paintGL()
 
     // okay, we think it's safe to proceed now!
     
-    window->Paint();
+    scene->Paint();
 
 
 #if 0
@@ -436,7 +438,7 @@ EL3DWindow::resizeGL(int w, int h)
     view.w = w;
     view.h = h;
     //makeCurrent();
-    window->Resize(w,h);
+    scene->Resize(w,h);
 }
 
 // ****************************************************************************

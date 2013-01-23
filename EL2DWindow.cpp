@@ -9,6 +9,7 @@
 #include <eavlColorTable.h>
 #include <eavlRenderer.h>
 #include <eavlWindow.h>
+#include <eavlScene.h>
 #include <eavlBitmapFont.h>
 #include <eavlBitmapFontFactory.h>
 #include <eavlPNGImporter.h>
@@ -43,7 +44,8 @@ EL2DWindow::EL2DWindow(ELWindowManager *parent)
     view.vr = +.7;
     view.vb = -.7;
     view.vt = +.7;
-    window = new eavl2DGLWindow(view);
+    window = new eavlWindow(view);
+    scene = new eavl2DGLScene(window, view);
     colorbar = new eavlColorBarAnnotation(window);
     haxis = new eavl2DAxisAnnotation(window);
     vaxis = new eavl2DAxisAnnotation(window);
@@ -145,7 +147,7 @@ void
 EL2DWindow::initializeGL()
 {
     //makeCurrent();
-    window->Initialize();
+    scene->Initialize();
 }
 
 
@@ -154,7 +156,7 @@ EL2DWindow::UpdatePlots()
 {
     //cerr << "EL3DWindow::UpdatePlots\n";
     bool shoulddraw = false;
-    window->plots.clear();
+    scene->plots.clear();
     for (unsigned int i=0;  i<plots.size(); i++)
     {
         bool watchingCurrent = watchedPipelines[0];
@@ -182,7 +184,7 @@ EL2DWindow::UpdatePlots()
                                                          eavlColor::white);
         }
 
-        window->plots.push_back(p);
+        scene->plots.push_back(p);
     }
     return shoulddraw;
 }
@@ -205,7 +207,7 @@ EL2DWindow::UpdatePlots()
 void
 EL2DWindow::ResetView()
 {
-    window->ResetView();
+    scene->ResetView();
     updateGL();
 }
 
@@ -250,7 +252,7 @@ EL2DWindow::paintGL()
 
     // okay, we think it's safe to proceed now!
 
-    window->Paint();
+    scene->Paint();
 
     // test of font rendering
 #if 0
@@ -356,7 +358,7 @@ EL2DWindow::resizeGL(int w, int h)
     view.w = w;
     view.h = h;
     //makeCurrent();
-    window->Resize(w,h);
+    scene->Resize(w,h);
 }
 
 // ****************************************************************************

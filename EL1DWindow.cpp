@@ -9,6 +9,7 @@
 #include <eavlColorTable.h>
 #include <eavlRenderer.h>
 #include <eavlWindow.h>
+#include <eavlScene.h>
 #include <eavlBitmapFont.h>
 #include <eavlBitmapFontFactory.h>
 #include <eavlPNGImporter.h>
@@ -43,7 +44,8 @@ EL1DWindow::EL1DWindow(ELWindowManager *parent)
     view.vr = +.7;
     view.vb = -.7;
     view.vt = +.7;
-    window = new eavl1DGLWindow(view);
+    window = new eavlWindow(view);
+    scene = new eavl1DGLScene(window, view);
     haxis = new eavl2DAxisAnnotation(window);
     vaxis = new eavl2DAxisAnnotation(window);
     frame = new eavl2DFrameAnnotation(window);
@@ -142,7 +144,7 @@ void
 EL1DWindow::initializeGL()
 {
     //makeCurrent();
-    window->Initialize();
+    scene->Initialize();
 }
 
 
@@ -151,7 +153,7 @@ EL1DWindow::UpdatePlots()
 {
     //cerr << "EL3DWindow::UpdatePlots\n";
     bool shoulddraw = false;
-    window->plots.clear();
+    scene->plots.clear();
     for (unsigned int i=0;  i<plots.size(); i++)
     {
         bool watchingCurrent = watchedPipelines[0];
@@ -181,7 +183,7 @@ EL1DWindow::UpdatePlots()
                                                 p.data->GetField(p.variable_fieldindex)->GetArray()->GetName());
         }
 
-        window->plots.push_back(p);
+        scene->plots.push_back(p);
     }
     return shoulddraw;
 }
@@ -206,7 +208,7 @@ EL1DWindow::ResetView()
 {
     //cerr << "EL1DWindow::ResetView\n";
     UpdatePlots();
-    window->ResetView();
+    scene->ResetView();
     updateGL();
 }
 
@@ -249,7 +251,7 @@ EL1DWindow::paintGL()
     if (!shoulddraw)
         return;
 
-    window->Paint();
+    scene->Paint();
 
     glDisable(GL_DEPTH_TEST);
 
@@ -304,7 +306,7 @@ EL1DWindow::resizeGL(int w, int h)
     view.w = w;
     view.h = h;
     //makeCurrent();
-    window->Resize(w,h);
+    scene->Resize(w,h);
 }
 
 // ****************************************************************************

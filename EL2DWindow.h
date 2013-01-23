@@ -1,4 +1,4 @@
-// Copyright 2012-2013 UT-Battelle, LLC.  See LICENSE.txt for more information.
+ // Copyright 2012-2013 UT-Battelle, LLC.  See LICENSE.txt for more information.
 #ifndef EL_2D_WINDOW_H
 #define EL_2D_WINDOW_H
 
@@ -12,6 +12,7 @@
 #include <eavlPlot.h>
 
 class eavlWindow;
+class eavlScene;
 class Pipeline;
 class eavlRenderer;
 class eavlColorBarAnnotation;
@@ -129,6 +130,7 @@ class EL2DWindow : public QGLWidget
     bool       showmesh;
 
     eavlWindow *window;
+    eavlScene *scene;
     eavlColorBarAnnotation *colorbar;
     eavl2DAxisAnnotation *haxis, *vaxis;
     eavl2DFrameAnnotation *frame;
