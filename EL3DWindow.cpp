@@ -232,6 +232,8 @@ EL3DWindow::ResetView()
 void
 EL3DWindow::paintGL()
 {
+    view.SetupMatrices();
+
     //cerr << "EL3DWindow::paintGL\n";
     glClearColor(0.2, 0.0, 0.3, 1.0);
     glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
@@ -257,7 +259,7 @@ EL3DWindow::paintGL()
 
 
 #if 0
-    // test of font rendering
+    // various tests of font rendering
     static eavlTextAnnotation *t1=NULL,*t1b=NULL,*t1c=NULL, *t2=NULL,*t3=NULL,*t3b=NULL, *t4=NULL,*t4b=NULL;
     if (!t1)
     {
@@ -296,29 +298,14 @@ EL3DWindow::paintGL()
     }
 
 
-    t1->Setup(view);
-    t1->Render();
-
-    t1b->Setup(view);
-    t1b->Render();
-
-    t1c->Setup(view);
-    t1c->Render();
-
-    t2->Setup(view);
-    t2->Render();
-
-    t3->Setup(view);
-    t3->Render();
-
-    t3b->Setup(view);
-    t3b->Render();
-
-    t4->Setup(view);
-    t4->Render();
-
-    t4b->Setup(view);
-    t4b->Render();
+    t1->Render(view);
+    t1b->Render(view);
+    t1c->Render(view);
+    t2->Render(view);
+    t3->Render(view);
+    t3b->Render(view);
+    t4->Render(view);
+    t4b->Render(view);
 #endif
 
     bbox->SetColor(eavlColor(.3,.3,.3));
@@ -328,8 +315,7 @@ EL3DWindow::paintGL()
                      view.maxextents[1],
                      view.minextents[2],
                      view.maxextents[2]);
-    bbox->Setup(view);
-    bbox->Render();
+    bbox->Render(view);
 
     double ds_size = sqrt( (view.maxextents[0]-view.minextents[0])*(view.maxextents[0]-view.minextents[0]) +
                            (view.maxextents[1]-view.minextents[1])*(view.maxextents[1]-view.minextents[1]) +
@@ -337,7 +323,6 @@ EL3DWindow::paintGL()
 
     glDepthRange(-.0001,.9999);
 
-    view.SetMatricesForViewport();
     eavlVector3 viewdir = view.view3d.at - view.view3d.from;
     bool xtest = (viewdir * eavlVector3(1,0,0)) >= 0;
     bool ytest = (viewdir * eavlVector3(0,1,0)) >= 0;
@@ -363,8 +348,7 @@ EL3DWindow::paintGL()
     xaxis->SetMajorTickSize(ds_size / 40., 0);
     xaxis->SetMinorTickSize(ds_size / 80., 0);
     xaxis->SetLabelFontScale(ds_size / 30.);
-    xaxis->Setup(view);
-    xaxis->Render();
+    xaxis->Render(view);
 
     yaxis->SetAxis(1);
     yaxis->SetColor(eavlColor::white);
@@ -379,8 +363,7 @@ EL3DWindow::paintGL()
     yaxis->SetMajorTickSize(ds_size / 40., 0);
     yaxis->SetMinorTickSize(ds_size / 80., 0);
     yaxis->SetLabelFontScale(ds_size / 30.);
-    yaxis->Setup(view);
-    yaxis->Render();
+    yaxis->Render(view);
 
     if (outsideedges)
     {
@@ -400,8 +383,7 @@ EL3DWindow::paintGL()
     zaxis->SetMajorTickSize(ds_size / 40., 0);
     zaxis->SetMinorTickSize(ds_size / 80., 0);
     zaxis->SetLabelFontScale(ds_size / 30.);
-    zaxis->Setup(view);
-    zaxis->Render();
+    zaxis->Render(view);
 
     glDepthRange(0,1);
 
@@ -412,8 +394,7 @@ EL3DWindow::paintGL()
         colorbar->SetAxisColor(eavlColor::white);
         colorbar->SetRange(vmin, vmax, 5);
         colorbar->SetColorTable(plots[0].colortable);
-        colorbar->Setup(view);
-        colorbar->Render();
+        colorbar->Render(view);
     }
 }
 

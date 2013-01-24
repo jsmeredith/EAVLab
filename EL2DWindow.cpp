@@ -232,6 +232,8 @@ EL2DWindow::ResetView()
 void
 EL2DWindow::paintGL()
 {
+    view.SetupMatrices();
+
     glClearColor(0.0, 0.15, 0.3, 1.0);
     glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
@@ -259,13 +261,13 @@ EL2DWindow::paintGL()
     static eavlTextAnnotation *tt=NULL;
     if (!tt)
     {
-        switch (4)
+        switch (1)
         {
           case 1:
             tt = new eavlWorldTextAnnotation(window,"Test 2D world text, [] height=0.05 at (0.3,0.3)",
                                              eavlColor::white, .05,
                                              0.3, 0.3, 0,
-                                             0,0,-1,   0,1,0);
+                                             0,0,-1,   -1,1,0);
             //tt->SetAnchor(.5,.5);
             break;
           case 2:
@@ -289,22 +291,17 @@ EL2DWindow::paintGL()
         }
     }
     glDisable(GL_DEPTH_TEST);
-    tt->Setup(view);
-    tt->Render();
+    tt->Render(view);
     ///\todo: hack: should SetMatrices maybe do this?
-    glViewport(0,0,view.w,view.h);
 #endif
 
     glDisable(GL_DEPTH_TEST);
 
-    view.SetMatricesForScreen();
     float vl, vr, vt, vb;
-    view.GetReal2DViewport(vl,vr,vb,vt);
-
-    frame->Setup(view);
+    view.GetRealViewport(vl,vr,vb,vt);
     frame->SetExtents(vl,vr, vb,vt);
     frame->SetColor(eavlColor(.7,.7,.7));
-    frame->Render();
+    frame->Render(view);
 
     haxis->SetColor(eavlColor::white);
     haxis->SetScreenPosition(vl,vb, vr,vb);
@@ -312,17 +309,15 @@ EL2DWindow::paintGL()
     haxis->SetMajorTickSize(0, .05, 1.0);
     haxis->SetMinorTickSize(0, .02, 1.0);
     haxis->SetLabelAnchor(0.5, 1.0);
-    haxis->Setup(view);
-    haxis->Render();
+    haxis->Render(view);
 
     vaxis->SetColor(eavlColor::white);
     vaxis->SetScreenPosition(vl,vb, vl,vt);
     vaxis->SetRangeForAutoTicks(view.view2d.b, view.view2d.t);
-    vaxis->SetMajorTickSize(.05 / view.aspect, 0, 1.0);
-    vaxis->SetMinorTickSize(.02 / view.aspect, 0, 1.0);
+    vaxis->SetMajorTickSize(.05 / view.windowaspect, 0, 1.0);
+    vaxis->SetMinorTickSize(.02 / view.windowaspect, 0, 1.0);
     vaxis->SetLabelAnchor(1.0, 0.47);
-    vaxis->Setup(view);
-    vaxis->Render();
+    vaxis->Render(view);
 
     if (plots[0].pcRenderer)
     {
@@ -331,8 +326,7 @@ EL2DWindow::paintGL()
         colorbar->SetAxisColor(eavlColor::white);
         colorbar->SetRange(vmin, vmax, 5);
         colorbar->SetColorTable(plots[0].colortable);
-        colorbar->Setup(view);
-        colorbar->Render();
+        colorbar->Render(view);
     }
 
 }
@@ -414,7 +408,7 @@ EL2DWindow::mouseMoveEvent(QMouseEvent *mev)
     {
 
         float vl, vr, vt, vb;
-        view.GetReal2DViewport(vl,vr,vb,vt);
+        view.GetRealViewport(vl,vr,vb,vt);
 
         float x1 =  ((float(lastx*2)/float(width()))  - 1.0);
         float y1 = -((float(lasty*2)/float(height())) - 1.0);

@@ -233,6 +233,8 @@ EL1DWindow::ResetView()
 void
 EL1DWindow::paintGL()
 {
+    view.SetupMatrices();
+
     glClearColor(1,1,1, 1.0);
     glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
@@ -255,14 +257,11 @@ EL1DWindow::paintGL()
 
     glDisable(GL_DEPTH_TEST);
 
-    view.SetMatricesForScreen();
     float vl, vr, vt, vb;
-    view.GetReal2DViewport(vl,vr,vb,vt);
-
-    frame->Setup(view);
+    view.GetRealViewport(vl,vr,vb,vt);
     frame->SetExtents(vl,vr, vb,vt);
     frame->SetColor(eavlColor(.5,.5,.5));
-    frame->Render();
+    frame->Render(view);
 
     haxis->SetColor(eavlColor::black);
     haxis->SetScreenPosition(vl,vb, vr,vb);
@@ -270,17 +269,15 @@ EL1DWindow::paintGL()
     haxis->SetMajorTickSize(0, .05, 1.0);
     haxis->SetMinorTickSize(0, .02, 1.0);
     haxis->SetLabelAnchor(0.5, 1.0);
-    haxis->Setup(view);
-    haxis->Render();
+    haxis->Render(view);
 
     vaxis->SetColor(eavlColor::black);
     vaxis->SetScreenPosition(vl,vb, vl,vt);
     vaxis->SetRangeForAutoTicks(view.view2d.b, view.view2d.t);
-    vaxis->SetMajorTickSize(.05 / view.aspect, 0, 1.0);
-    vaxis->SetMinorTickSize(.02 / view.aspect, 0, 1.0);
+    vaxis->SetMajorTickSize(.05 / view.windowaspect, 0, 1.0);
+    vaxis->SetMinorTickSize(.02 / view.windowaspect, 0, 1.0);
     vaxis->SetLabelAnchor(1.0, 0.47);
-    vaxis->Setup(view);
-    vaxis->Render();
+    vaxis->Render(view);
 
 
 }
@@ -362,7 +359,7 @@ EL1DWindow::mouseMoveEvent(QMouseEvent *mev)
     {
 
         float vl, vr, vt, vb;
-        view.GetReal2DViewport(vl,vr,vb,vt);
+        view.GetRealViewport(vl,vr,vb,vt);
 
         float x1 =  ((float(lastx*2)/float(width()))  - 1.0);
         float y1 = -((float(lasty*2)/float(height())) - 1.0);
