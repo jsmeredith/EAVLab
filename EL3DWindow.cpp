@@ -8,16 +8,10 @@
 
 #include <eavlColorTable.h>
 #include <eavlRenderer.h>
-#include <eavlWindow.h>
+#include <eavl3DWindow.h>
 #include <eavlScene.h>
-#include <eavlBitmapFont.h>
-#include <eavlBitmapFontFactory.h>
-#include <eavlPNGImporter.h>
 #include <eavlTexture.h>
 #include <eavlTextAnnotation.h>
-#include <eavlColorBarAnnotation.h>
-#include <eavlBoundingBoxAnnotation.h>
-#include <eavl3DAxisAnnotation.h>
 
 #include <cfloat>
 
@@ -40,13 +34,9 @@ EL3DWindow::EL3DWindow(ELWindowManager *parent)
     showghosts = false;
     showmesh = false;
 
-    window = new eavlWindow(view);
-    scene = new eavl3DGLScene(window, view);
-    colorbar = new eavlColorBarAnnotation(window);
-    bbox = new eavlBoundingBoxAnnotation(window);
-    xaxis = new eavl3DAxisAnnotation(window);
-    yaxis = new eavl3DAxisAnnotation(window);
-    zaxis = new eavl3DAxisAnnotation(window);
+    window = new eavl3DWindow();
+    scene = new eavl3DGLScene(window, window->view);
+    window->scene = scene;
 
     ///\todo: hack: assuming 4 pipelines
     currentPipeline = 0;
@@ -146,8 +136,6 @@ EL3DWindow::CurrentPipelineChanged(int index)
 void
 EL3DWindow::initializeGL()
 {
-    //makeCurrent();
-    scene->Initialize();
 }
 
 bool
@@ -232,12 +220,6 @@ EL3DWindow::ResetView()
 void
 EL3DWindow::paintGL()
 {
-    view.SetupMatrices();
-
-    //cerr << "EL3DWindow::paintGL\n";
-    glClearColor(0.2, 0.0, 0.3, 1.0);
-    glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-
     bool shoulddraw = UpdatePlots();
 
     ///\todo: note: there's some issue where this method is getting
@@ -255,7 +237,7 @@ EL3DWindow::paintGL()
 
     // okay, we think it's safe to proceed now!
     
-    scene->Paint();
+    window->Paint();
 
 
 #if 0
@@ -308,94 +290,6 @@ EL3DWindow::paintGL()
     t4b->Render(view);
 #endif
 
-    bbox->SetColor(eavlColor(.3,.3,.3));
-    bbox->SetExtents(view.minextents[0],
-                     view.maxextents[0],
-                     view.minextents[1],
-                     view.maxextents[1],
-                     view.minextents[2],
-                     view.maxextents[2]);
-    bbox->Render(view);
-
-    double ds_size = sqrt( (view.maxextents[0]-view.minextents[0])*(view.maxextents[0]-view.minextents[0]) +
-                           (view.maxextents[1]-view.minextents[1])*(view.maxextents[1]-view.minextents[1]) +
-                           (view.maxextents[2]-view.minextents[2])*(view.maxextents[2]-view.minextents[2]) );
-
-    glDepthRange(-.0001,.9999);
-
-    eavlVector3 viewdir = view.view3d.at - view.view3d.from;
-    bool xtest = (viewdir * eavlVector3(1,0,0)) >= 0;
-    bool ytest = (viewdir * eavlVector3(0,1,0)) >= 0;
-    bool ztest = (viewdir * eavlVector3(0,0,1)) >= 0;
-
-    bool outsideedges = true; // if false, do closesttriad
-    if (outsideedges)
-    {
-        xtest = !xtest;
-        ytest = !ytest;
-    }
-
-    xaxis->SetAxis(0);
-    xaxis->SetColor(eavlColor::white);
-    xaxis->SetTickInvert(xtest,ytest,ztest);
-    xaxis->SetWorldPosition(view.minextents[0],
-                            ytest ? view.minextents[1] : view.maxextents[1],
-                            ztest ? view.minextents[2] : view.maxextents[2],
-                            view.maxextents[0],
-                            ytest ? view.minextents[1] : view.maxextents[1],
-                            ztest ? view.minextents[2] : view.maxextents[2]);
-    xaxis->SetRange(view.minextents[0], view.maxextents[0]);
-    xaxis->SetMajorTickSize(ds_size / 40., 0);
-    xaxis->SetMinorTickSize(ds_size / 80., 0);
-    xaxis->SetLabelFontScale(ds_size / 30.);
-    xaxis->Render(view);
-
-    yaxis->SetAxis(1);
-    yaxis->SetColor(eavlColor::white);
-    yaxis->SetTickInvert(xtest,ytest,ztest);
-    yaxis->SetWorldPosition(xtest ? view.minextents[0] : view.maxextents[0],
-                            view.minextents[1],
-                            ztest ? view.minextents[2] : view.maxextents[2],
-                            xtest ? view.minextents[0] : view.maxextents[0],
-                            view.maxextents[1],
-                            ztest ? view.minextents[2] : view.maxextents[2]);
-    yaxis->SetRange(view.minextents[1], view.maxextents[1]);
-    yaxis->SetMajorTickSize(ds_size / 40., 0);
-    yaxis->SetMinorTickSize(ds_size / 80., 0);
-    yaxis->SetLabelFontScale(ds_size / 30.);
-    yaxis->Render(view);
-
-    if (outsideedges)
-    {
-        //xtest = !xtest;
-        ytest = !ytest;
-    }
-    zaxis->SetAxis(2);
-    zaxis->SetColor(eavlColor::white);
-    zaxis->SetTickInvert(xtest,ytest,ztest);
-    zaxis->SetWorldPosition(xtest ? view.minextents[0] : view.maxextents[0],
-                            ytest ? view.minextents[1] : view.maxextents[1],
-                            view.minextents[2],
-                            xtest ? view.minextents[0] : view.maxextents[0],
-                            ytest ? view.minextents[1] : view.maxextents[1],
-                            view.maxextents[2]);
-    zaxis->SetRange(view.minextents[2], view.maxextents[2]);
-    zaxis->SetMajorTickSize(ds_size / 40., 0);
-    zaxis->SetMinorTickSize(ds_size / 80., 0);
-    zaxis->SetLabelFontScale(ds_size / 30.);
-    zaxis->Render(view);
-
-    glDepthRange(0,1);
-
-    if (plots[0].pcRenderer)
-    {
-        double vmin, vmax;
-        ((eavlPseudocolorRenderer*)(plots[0].pcRenderer))->GetLimits(vmin, vmax);
-        colorbar->SetAxisColor(eavlColor::white);
-        colorbar->SetRange(vmin, vmax, 5);
-        colorbar->SetColorTable(plots[0].colortable);
-        colorbar->Render(view);
-    }
 }
 
 // ****************************************************************************
@@ -416,10 +310,7 @@ EL3DWindow::paintGL()
 void
 EL3DWindow::resizeGL(int w, int h)
 {
-    view.w = w;
-    view.h = h;
-    //makeCurrent();
-    scene->Resize(w,h);
+    window->Resize(w,h);
 }
 
 // ****************************************************************************
@@ -483,38 +374,17 @@ EL3DWindow::mouseMoveEvent(QMouseEvent *mev)
             {
                 float dx = x2-x1;
                 float dy = y2-y1;
-                view.view3d.xpan += dx;
-                view.view3d.ypan += dy;
+                window->view.Pan3D(dx, dy);
             }
             else
             {
-                eavlMatrix4x4 R1;
-                R1.CreateTrackball(-x1,-y1, -x2,-y2);
-                eavlMatrix4x4 T1;
-                T1.CreateTranslate(-view.view3d.at);
-                eavlMatrix4x4 T2;
-                T2.CreateTranslate(view.view3d.at);
-                
-                eavlMatrix4x4 V1(view.V);
-                V1.m[0][3]=0;
-                V1.m[1][3]=0;
-                V1.m[2][3]=0;
-                eavlMatrix4x4 V2(V1);
-                V2.Transpose();
-                
-                eavlMatrix4x4 MM = T2 * V2 * R1 * V1 * T1;
-                
-                view.view3d.from = MM*view.view3d.from;
-                view.view3d.at   = MM*view.view3d.at;
-                view.view3d.up   = MM*view.view3d.up;
+                window->view.TrackballRotate(x1,y1, x2,y2);
             }
         }
         else if (mev->buttons() & Qt::MidButton)
         {
-            double z = 1 + (y2-y1);
-            view.view3d.zoom *= z;
-            view.view3d.xpan *= z;
-            view.view3d.ypan *= z;
+            double zoom = y2-y1;
+            window->view.Zoom3D(zoom);
         }
         // No: we want a popup menu instead!
         //else if (mev->buttons() & Qt::RightButton)

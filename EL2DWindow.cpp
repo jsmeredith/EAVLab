@@ -8,16 +8,9 @@
 
 #include <eavlColorTable.h>
 #include <eavlRenderer.h>
-#include <eavlWindow.h>
+#include <eavl2DWindow.h>
 #include <eavlScene.h>
-#include <eavlBitmapFont.h>
-#include <eavlBitmapFontFactory.h>
-#include <eavlPNGImporter.h>
 #include <eavlTexture.h>
-#include <eavlTextAnnotation.h>
-#include <eavlColorBarAnnotation.h>
-#include <eavl2DAxisAnnotation.h>
-#include <eavl2DFrameAnnotation.h>
 
 #include <cfloat>
 
@@ -40,16 +33,9 @@ EL2DWindow::EL2DWindow(ELWindowManager *parent)
     showghosts = false;
     showmesh = false;
 
-    view.vl = -.7;
-    view.vr = +.7;
-    view.vb = -.7;
-    view.vt = +.7;
-    window = new eavlWindow(view);
-    scene = new eavl2DGLScene(window, view);
-    colorbar = new eavlColorBarAnnotation(window);
-    haxis = new eavl2DAxisAnnotation(window);
-    vaxis = new eavl2DAxisAnnotation(window);
-    frame = new eavl2DFrameAnnotation(window);
+    window = new eavl2DWindow();
+    scene = new eavl2DGLScene(window, window->view);
+    window->scene = scene; ///\todo: HACK: duplicate scene storage?
 
     ///\todo: hack: assuming 4 pipelines
     currentPipeline = 0;
@@ -146,8 +132,6 @@ EL2DWindow::CurrentPipelineChanged(int index)
 void
 EL2DWindow::initializeGL()
 {
-    //makeCurrent();
-    scene->Initialize();
 }
 
 
@@ -232,11 +216,6 @@ EL2DWindow::ResetView()
 void
 EL2DWindow::paintGL()
 {
-    view.SetupMatrices();
-
-    glClearColor(0.0, 0.15, 0.3, 1.0);
-    glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-
     bool shoulddraw = UpdatePlots();
 
     ///\todo: note: there's some issue where this method is getting
@@ -253,8 +232,7 @@ EL2DWindow::paintGL()
         return;
 
     // okay, we think it's safe to proceed now!
-
-    scene->Paint();
+    window->Paint();
 
     // test of font rendering
 #if 0
@@ -295,39 +273,6 @@ EL2DWindow::paintGL()
     ///\todo: hack: should SetMatrices maybe do this?
 #endif
 
-    glDisable(GL_DEPTH_TEST);
-
-    float vl, vr, vt, vb;
-    view.GetRealViewport(vl,vr,vb,vt);
-    frame->SetExtents(vl,vr, vb,vt);
-    frame->SetColor(eavlColor(.7,.7,.7));
-    frame->Render(view);
-
-    haxis->SetColor(eavlColor::white);
-    haxis->SetScreenPosition(vl,vb, vr,vb);
-    haxis->SetRangeForAutoTicks(view.view2d.l, view.view2d.r);
-    haxis->SetMajorTickSize(0, .05, 1.0);
-    haxis->SetMinorTickSize(0, .02, 1.0);
-    haxis->SetLabelAnchor(0.5, 1.0);
-    haxis->Render(view);
-
-    vaxis->SetColor(eavlColor::white);
-    vaxis->SetScreenPosition(vl,vb, vl,vt);
-    vaxis->SetRangeForAutoTicks(view.view2d.b, view.view2d.t);
-    vaxis->SetMajorTickSize(.05 / view.windowaspect, 0, 1.0);
-    vaxis->SetMinorTickSize(.02 / view.windowaspect, 0, 1.0);
-    vaxis->SetLabelAnchor(1.0, 0.47);
-    vaxis->Render(view);
-
-    if (plots[0].pcRenderer)
-    {
-        double vmin, vmax;
-        ((eavlPseudocolorRenderer*)(plots[0].pcRenderer))->GetLimits(vmin, vmax);
-        colorbar->SetAxisColor(eavlColor::white);
-        colorbar->SetRange(vmin, vmax, 5);
-        colorbar->SetColorTable(plots[0].colortable);
-        colorbar->Render(view);
-    }
 
 }
 
@@ -349,10 +294,7 @@ EL2DWindow::paintGL()
 void
 EL2DWindow::resizeGL(int w, int h)
 {
-    view.w = w;
-    view.h = h;
-    //makeCurrent();
-    scene->Resize(w,h);
+    window->Resize(w,h);
 }
 
 // ****************************************************************************
@@ -406,10 +348,6 @@ EL2DWindow::mouseMoveEvent(QMouseEvent *mev)
 
     if (mousedown)
     {
-
-        float vl, vr, vt, vb;
-        view.GetRealViewport(vl,vr,vb,vt);
-
         float x1 =  ((float(lastx*2)/float(width()))  - 1.0);
         float y1 = -((float(lasty*2)/float(height())) - 1.0);
         float x2 =  ((float(  x  *2)/float(width()))  - 1.0);
@@ -417,118 +355,14 @@ EL2DWindow::mouseMoveEvent(QMouseEvent *mev)
 
         if (mev->buttons() & Qt::LeftButton)
         {
-            float xpan = (x2-x1) * (view.view2d.r-view.view2d.l) / (vr - vl);
-            float ypan = (y2-y1) * (view.view2d.t-view.view2d.b) / (vt - vb);
-
-            view.view2d.l -= xpan;
-            view.view2d.r -= xpan;
-
-            view.view2d.t -= ypan;
-            view.view2d.b -= ypan;
+            float dx = x2-x1;
+            float dy = y2-y1;
+            window->view.Pan2D(dx,dy);
         }
         else if (mev->buttons() & Qt::MidButton)
         {
-            /* simple code, fixed viewport:
             double zoom = y2 - y1;
-            double factor = pow(4., zoom);
-            double xc = (view.view2d.l + view.view2d.r) / 2.;
-            double yc = (view.view2d.b + view.view2d.t) / 2.;
-            double xs = (view.view2d.r - view.view2d.l);
-            double ys = (view.view2d.t - view.view2d.b);
-            xs /= factor;
-            ys /= factor;
-            view.view2d.l = xc - .5*xs;
-            view.view2d.r = xc + .5*xs;
-            view.view2d.b = yc - .5*ys;
-            view.view2d.t = yc + .5*ys;*/
-
-            double zoom = y2 - y1;
-            double factor = pow(4., zoom);
-            double xc = (view.view2d.l + view.view2d.r) / 2.;
-            double yc = (view.view2d.b + view.view2d.t) / 2.;
-            double xs = (view.view2d.r - view.view2d.l) / 2.;
-            double ys = (view.view2d.t - view.view2d.b) / 2.;
-            // If we're zooming in, we first want to expand the
-            // viewport if possible before actually having to pull
-            // the x/y region in.  We accomplish expanding the
-            // viewport the horizontal/vertical direction by
-            // (respectively) pulling in the y/x limits while
-            // leaving the x/y limits alone.  (Or at least leaving
-            // the x/y limits as large as possible.)
-            double allowed_x_expansion = (view.vr - view.vl) / (vr-vl);
-            double allowed_y_expansion = (view.vt - view.vb) / (vt-vb);
-
-            /*
-            cerr << "allowx = "<<allowed_x_expansion<<endl;
-            cerr << "allowy = "<<allowed_y_expansion<<endl;
-            cerr << "factor = "<<factor<<endl;
-            cerr << endl;
-            */
-
-            if (zoom > 0 && allowed_x_expansion>1.01)
-            {
-                // not using this:
-                //double xfactor = factor;
-                //if (allowed_x_expansion > xfactor)
-                //    xfactor = 1;
-                //else
-                //    xfactor /= allowed_x_expansion;
-
-                bool in_l = xc - xs/factor < view.minextents[0];
-                bool in_r = xc + xs/factor > view.maxextents[0];
-                if (in_l && in_r)
-                {
-                    view.view2d.l = xc - xs/factor;
-                    view.view2d.r = xc + xs/factor;
-                }
-                else if (in_l)
-                {
-                    view.view2d.l = xc - xs/(factor*factor);
-                }
-                else if (in_r)
-                {
-                    view.view2d.r = xc + xs/(factor*factor);
-                }
-
-                view.view2d.b = yc - ys/factor;
-                view.view2d.t = yc + ys/factor;
-            }
-            else if (zoom > 0 && allowed_y_expansion>1.01)
-            {
-                // not using this:
-                //double yfactor = factor;
-                //if (allowed_y_expansion > yfactor)
-                //    yfactor = 1;
-                //else
-                //    yfactor /= allowed_y_expansion;
-
-                bool in_b = yc - ys/factor < view.minextents[1];
-                bool in_t = yc + ys/factor > view.maxextents[1];
-                if (in_b && in_t)
-                {
-                    view.view2d.b = yc - ys/factor;
-                    view.view2d.t = yc + ys/factor;
-                }
-                else if (in_b)
-                {
-                    view.view2d.b = yc - ys/(factor*factor);
-                }
-                else if (in_t)
-                {
-                    view.view2d.t = yc + ys/(factor*factor);
-                }
-
-                view.view2d.l = xc - xs/factor;
-                view.view2d.r = xc + xs/factor;
-            }
-            else
-            {
-                view.view2d.l = xc - xs/factor;
-                view.view2d.r = xc + xs/factor;
-                view.view2d.b = yc - ys/factor;
-                view.view2d.t = yc + ys/factor;
-            }
-
+            window->view.Zoom2D(zoom, true);
         }
         // No: we want a popup menu instead!
         //else if (mev->buttons() & Qt::RightButton)

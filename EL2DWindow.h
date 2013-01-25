@@ -11,13 +11,10 @@
 #include <eavlDataSet.h>
 #include <eavlPlot.h>
 
-class eavlWindow;
+class eavl2DWindow;
 class eavlScene;
 class Pipeline;
 class eavlRenderer;
-class eavlColorBarAnnotation;
-class eavl2DAxisAnnotation;
-class eavl2DFrameAnnotation;
 
 // ****************************************************************************
 // Class:  EL2DWindowSettings
@@ -129,12 +126,8 @@ class EL2DWindow : public QGLWidget
     bool       showghosts;
     bool       showmesh;
 
-    eavlWindow *window;
-    eavlScene *scene;
-    eavlColorBarAnnotation *colorbar;
-    eavl2DAxisAnnotation *haxis, *vaxis;
-    eavl2DFrameAnnotation *frame;
-    eavlView view;
+    eavl2DWindow *window;
+    eavlScene    *scene;
 
     vector<eavlPlot> plots;
 
