@@ -35,9 +35,8 @@ EL1DWindow::EL1DWindow(ELWindowManager *parent)
     showmesh = false;
     barstyle = false;
 
-    window = new eavl1DWindow();
-    scene = new eavl1DGLScene(window, window->view);
-    window->scene = scene;
+    scene = new eavl1DGLScene();
+    window = new eavl1DWindow(scene);
 
     ///\todo: hack: assuming 4 pipelines
     currentPipeline = 0;
@@ -195,7 +194,7 @@ EL1DWindow::ResetView()
 {
     //cerr << "EL1DWindow::ResetView\n";
     UpdatePlots();
-    scene->ResetView();
+    scene->ResetView(window);
     updateGL();
 }
 

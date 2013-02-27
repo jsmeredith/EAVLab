@@ -33,9 +33,8 @@ EL2DWindow::EL2DWindow(ELWindowManager *parent)
     showghosts = false;
     showmesh = false;
 
-    window = new eavl2DWindow();
-    scene = new eavl2DGLScene(window, window->view);
-    window->scene = scene; ///\todo: HACK: duplicate scene storage?
+    scene = new eavl2DGLScene();
+    window = new eavl2DWindow(scene);
 
     ///\todo: hack: assuming 4 pipelines
     currentPipeline = 0;
@@ -191,7 +190,7 @@ EL2DWindow::UpdatePlots()
 void
 EL2DWindow::ResetView()
 {
-    scene->ResetView();
+    scene->ResetView(window);
     updateGL();
 }
 

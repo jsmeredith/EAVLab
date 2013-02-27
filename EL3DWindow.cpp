@@ -34,9 +34,8 @@ EL3DWindow::EL3DWindow(ELWindowManager *parent)
     showghosts = false;
     showmesh = false;
 
-    window = new eavl3DWindow();
-    scene = new eavl3DGLScene(window, window->view);
-    window->scene = scene;
+    scene = new eavl3DGLScene();
+    window = new eavl3DWindow(scene);
 
     ///\todo: hack: assuming 4 pipelines
     currentPipeline = 0;
@@ -195,7 +194,7 @@ EL3DWindow::ResetView()
 {
     //cerr << "EL3DWindow::ResetView\n";
     UpdatePlots();
-    scene->ResetView();
+    scene->ResetView(window);
     updateGL();
 }
 
