@@ -36,7 +36,7 @@ EL1DWindow::EL1DWindow(ELWindowManager *parent)
     barstyle = false;
 
     scene = new eavl1DGLScene();
-    window = new eavl1DWindow(scene);
+    window = new eavl1DWindow(eavlColor::white, NULL, scene);
 
     ///\todo: hack: assuming 4 pipelines
     currentPipeline = 0;
@@ -309,15 +309,15 @@ EL1DWindow::mouseMoveEvent(QMouseEvent *mev)
 
     if (mousedown)
     {
-        float x1 =  ((float(lastx*2)/float(width()))  - 1.0);
-        float y1 = -((float(lasty*2)/float(height())) - 1.0);
-        float x2 =  ((float(  x  *2)/float(width()))  - 1.0);
-        float y2 = -((float(  y  *2)/float(height())) - 1.0);
+        double x1 =  ((double(lastx*2)/double(width()))  - 1.0);
+        double y1 = -((double(lasty*2)/double(height())) - 1.0);
+        double x2 =  ((double(  x  *2)/double(width()))  - 1.0);
+        double y2 = -((double(  y  *2)/double(height())) - 1.0);
 
         if (mev->buttons() & Qt::LeftButton)
         {
-            float dx = x2-x1;
-            float dy = y2-y1;
+            double dx = x2-x1;
+            double dy = y2-y1;
             window->view.Pan2D(dx,dy);
         }
         else if (mev->buttons() & Qt::MidButton)
