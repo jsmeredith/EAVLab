@@ -41,12 +41,11 @@ EL2DWindow::EL2DWindow(ELWindowManager *parent)
     watchedPipelines.resize(NUMPIPES+1, false);
     for (int i=0; i<NUMPIPES; i++)
     {
-        eavlPlot p;
+        Plot p;
         p.data = NULL;
         p.colortable = "dense";
         p.variable_fieldindex = -1;
-        p.pcRenderer = NULL;
-        p.meshRenderer = NULL;
+        p.renderer = NULL;
         plots.push_back(p);
     }
 }
@@ -70,19 +69,16 @@ EL2DWindow::EL2DWindow(ELWindowManager *parent)
 void
 EL2DWindow::PipelineUpdated(int index, Pipeline *pipe)
 {
-    eavlPlot &p = plots[index];
+    Plot &p = plots[index];
 
     p.variable_fieldindex = -1;
     p.cellset_index = -1;
 
     p.data = pipe->result;
 
-    if (p.pcRenderer)
-        delete p.pcRenderer;
-    p.pcRenderer = NULL;
-    if (p.meshRenderer)
-        delete p.meshRenderer;
-    p.meshRenderer = NULL;
+    if (p.renderer)
+        delete p.renderer;
+    p.renderer = NULL;
 
     UpdatePlots();
     ResetView();
@@ -150,24 +146,26 @@ EL2DWindow::UpdatePlots()
             !watchingThis)
             continue;
 
-        eavlPlot &p = plots[i];
+        Plot &p = plots[i];
         if (!p.data)
             continue;
         shoulddraw = true;
 
-        if (!p.pcRenderer && p.variable_fieldindex >= 0)
+        if (!p.renderer && p.variable_fieldindex >= 0)
         {
-            p.pcRenderer = new eavlPseudocolorRenderer(p.data, 
-                                                       p.colortable,
-                                                       p.data->GetField(p.variable_fieldindex)->GetArray()->GetName());
+            p.renderer = new eavlPseudocolorRenderer(p.data, 
+                                                     p.colortable,
+                                                     p.cellset_index < 0 ? "" : p.data->GetCellSet(p.cellset_index)->GetName(),
+                                                     p.data->GetField(p.variable_fieldindex)->GetArray()->GetName());
         }
-        if (!p.meshRenderer)
+        if (!p.renderer)
         {
-            p.meshRenderer = new eavlSingleColorRenderer(p.data, 
-                                                         eavlColor::white);
+            p.renderer = new eavlSingleColorRenderer(p.data, 
+                                                     eavlColor::white,
+                                                     p.cellset_index < 0 ? "" : p.data->GetCellSet(p.cellset_index)->GetName());
         }
 
-        scene->plots.push_back(p);
+        scene->plots.push_back(p.renderer);
     }
     return shoulddraw;
 }
@@ -493,9 +491,9 @@ void
 EL2DWindow::SettingsVarChanged(const QString &var)
 {
     ///\todo: just prototyping; only affect plot 0
-    eavlPlot &p = plots[0];
-    delete p.pcRenderer;
-    p.pcRenderer = NULL;
+    Plot &p = plots[0];
+    delete p.renderer;
+    p.renderer = NULL;
     p.variable_fieldindex = -1;
     p.cellset_index = -1;
     if (p.data)

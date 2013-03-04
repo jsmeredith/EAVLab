@@ -9,7 +9,7 @@
 
 #include <eavlView.h>
 #include <eavlDataSet.h>
-#include <eavlPlot.h>
+#include <Plot.h>
 
 class eavl3DWindow;
 class eavlScene;
@@ -131,7 +131,7 @@ class EL3DWindow : public QGLWidget
     eavl3DWindow *window;
     eavlScene    *scene;
 
-    vector<eavlPlot> plots;
+    vector<Plot> plots;
 
   public slots:
     void CurrentPipelineChanged(int index);

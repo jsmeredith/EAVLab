@@ -43,7 +43,7 @@ EL1DWindow::EL1DWindow(ELWindowManager *parent)
     watchedPipelines.resize(NUMPIPES+1, false);
     for (int i=0; i<NUMPIPES; i++)
     {
-        eavlPlot p;
+        Plot p;
         p.data = NULL;
         p.colortable = "dense";
         p.variable_fieldindex = -1;
@@ -70,19 +70,16 @@ EL1DWindow::EL1DWindow(ELWindowManager *parent)
 void
 EL1DWindow::PipelineUpdated(int index, Pipeline *pipe)
 {
-    eavlPlot &p = plots[index];
+    Plot &p = plots[index];
 
     p.variable_fieldindex = -1;
     p.cellset_index = -1;
 
     p.data = pipe->result;
 
-    if (p.curveRenderer)
-        delete p.curveRenderer;
-    p.curveRenderer = NULL;
-    if (p.barRenderer)
-        delete p.barRenderer;
-    p.barRenderer = NULL;
+    if (p.renderer)
+        delete p.renderer;
+    p.renderer = NULL;
 
     UpdatePlots();
     ResetView();
@@ -150,26 +147,28 @@ EL1DWindow::UpdatePlots()
             !watchingThis)
             continue;
 
-        eavlPlot &p = plots[i];
+        Plot &p = plots[i];
         if (!p.data)
             continue;
         shoulddraw = true;
 
-        if (!barstyle && !p.curveRenderer && p.variable_fieldindex >= 0)
+        if (!barstyle && !p.renderer && p.variable_fieldindex >= 0)
         {
-            p.curveRenderer = new eavlCurveRenderer(p.data, 
-                                                    eavlColor(0,.7,0),
-                                                    p.data->GetField(p.variable_fieldindex)->GetArray()->GetName());
+            p.renderer = new eavlCurveRenderer(p.data, 
+                                               eavlColor(0,.7,0),
+                                               p.cellset_index < 0 ? "" : p.data->GetCellSet(p.cellset_index)->GetName(),
+                                               p.data->GetField(p.variable_fieldindex)->GetArray()->GetName());
         }
-        if (barstyle && !p.barRenderer && p.variable_fieldindex >= 0)
+        if (barstyle && !p.renderer && p.variable_fieldindex >= 0)
         {
-            p.barRenderer = new eavlBarRenderer(p.data, 
-                                                eavlColor(0,.7,0),
-                                                .10, // gap is 10% of bar width
-                                                p.data->GetField(p.variable_fieldindex)->GetArray()->GetName());
+            p.renderer = new eavlBarRenderer(p.data, 
+                                             eavlColor(0,.7,0),
+                                             .10, // gap is 10% of bar width
+                                             p.cellset_index < 0 ? "" : p.data->GetCellSet(p.cellset_index)->GetName(),
+                                             p.data->GetField(p.variable_fieldindex)->GetArray()->GetName());
         }
 
-        scene->plots.push_back(p);
+        scene->plots.push_back(p.renderer);
     }
     return shoulddraw;
 }
@@ -432,11 +431,9 @@ EL1DWindow::SettingsStyleChanged(const QString &style)
     ///\todo: just prototyping; only affect plot 0
     for (unsigned int i=0;  i<plots.size(); i++)
     {
-        eavlPlot &p = plots[i];
-        delete p.curveRenderer;
-        p.curveRenderer = NULL;
-        delete p.barRenderer;
-        p.barRenderer = NULL;
+        Plot &p = plots[i];
+        delete p.renderer;
+        p.renderer = NULL;
     }
     barstyle = (style == "Bars");
     updateGL();
@@ -463,11 +460,9 @@ void
 EL1DWindow::SettingsVarChanged(const QString &var)
 {
     ///\todo: just prototyping; only affect plot 0
-    eavlPlot &p = plots[0];
-    delete p.curveRenderer;
-    p.curveRenderer = NULL;
-    delete p.barRenderer;
-    p.barRenderer = NULL;
+    Plot &p = plots[0];
+    delete p.renderer;
+    p.renderer = NULL;
     p.variable_fieldindex = -1;
     p.cellset_index = -1;
     if (p.data)
