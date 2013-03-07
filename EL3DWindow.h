@@ -43,6 +43,7 @@ class EL3DWindowSettings : public QWidget
         QComboBox *ctCombo = new QComboBox(this);
         ctCombo->addItem("dense");
         ctCombo->addItem("sharp");
+        ctCombo->addItem("thermal");
         ctCombo->addItem("blue");
         ctCombo->addItem("orange");
         ctCombo->addItem("levels");

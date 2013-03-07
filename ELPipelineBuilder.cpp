@@ -18,6 +18,7 @@
 #include "ELSources.h"
 
 #include "ExternalFaceOperation.h"
+#include "ElevateOperation.h"
 #include "IsosurfaceOperation.h"
 #include "HistogramOperation.h"
 #include "SurfaceNormalsOperation.h"
@@ -74,6 +75,7 @@ ELPipelineBuilder::ELPipelineBuilder(QWidget *parent)
     /// Operation::GetOperationName.  We should loosed this restriction.
     const char *operations[] = {
         "Isosurface",
+        "Elevate",
         "ExternalFace",
         "Histogram",
         "SurfaceNormals",
@@ -233,6 +235,8 @@ ELPipelineBuilder::newOperation()
 
     if (actionname == "Isosurface")
         pipeline->ops.push_back(new IsosurfaceOperation);
+    else if (actionname == "Elevate")
+        pipeline->ops.push_back(new ElevateOperation);
     else if (actionname == "ExternalFace")
         pipeline->ops.push_back(new ExternalFaceOperation);
     else if (actionname == "Histogram")
