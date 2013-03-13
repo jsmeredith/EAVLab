@@ -9,19 +9,44 @@
 
 struct Plot
 {
-    eavlDataSet *data;
+    Pipeline *pipe;
     string colortable;
-    int cellset_index;
-    int variable_fieldindex;
-    //int variable_cellindex;
+    string cellset;
+    string field;
     eavlRenderer *renderer;
 
-    Plot() : data(NULL),
+    Plot() : pipe(NULL),
              colortable("default"),
-             cellset_index(-1),
-             variable_fieldindex(-1),
+             cellset(""),
+             field(""),
              renderer(NULL)
     {
+    }
+    void UpdateDataSet(eavlDataSet *ds)
+    {
+        delete renderer;
+        renderer = NULL;
+    }
+    void CreateRenderer()
+    {
+        if (renderer)
+            return;
+
+        if (field != "")
+        {
+            renderer = new eavlPseudocolorRenderer(pipe->result, 
+                                                   colortable,
+                                                   cellset,
+                                                   field);
+            return;
+        }
+        else
+        {
+            renderer = new eavlSingleColorRenderer(pipe->result, 
+                                                   eavlColor::white,
+                                                   cellset);
+        }
+        
     }
 };
 

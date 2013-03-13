@@ -40,7 +40,7 @@ class ELMainWindow : public QMainWindow
     void OpenFile(const QString &);
 
   public slots:
-    void PipelineUpdated(int pipeIndex, Pipeline *pipe);
+    void PipelineUpdated(Pipeline *pipe);
     void OpenFile();
     void Exit();
     void WindowAdded(QWidget*);

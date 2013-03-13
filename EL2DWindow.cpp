@@ -36,23 +36,13 @@ EL2DWindow::EL2DWindow(ELWindowManager *parent)
     scene = new eavl2DGLScene();
     window = new eavl2DWindow(eavlColor(0.0, 0.12, 0.25), NULL, scene);
 
-    ///\todo: hack: assuming 4 pipelines
-    currentPipeline = 0;
-    watchedPipelines.resize(NUMPIPES+1, false);
-    for (int i=0; i<NUMPIPES; i++)
-    {
-        Plot p;
-        p.data = NULL;
-        p.colortable = "dense";
-        p.variable_fieldindex = -1;
-        p.renderer = NULL;
-        plots.push_back(p);
-    }
+    // force creation
+    GetSettings();
 }
 
 
 // ****************************************************************************
-// Method:  EL2DWindow::SetPipeline
+// Method:  EL2DWindow::PipelineUpdated
 //
 // Purpose:
 ///   Set the pipeline this window is showing.
@@ -67,23 +57,11 @@ EL2DWindow::EL2DWindow(ELWindowManager *parent)
 // Modifications:
 // ****************************************************************************
 void
-EL2DWindow::PipelineUpdated(int index, Pipeline *pipe)
+EL2DWindow::PipelineUpdated(Pipeline *pipe)
 {
-    Plot &p = plots[index];
-
-    p.variable_fieldindex = -1;
-    p.cellset_index = -1;
-
-    p.data = pipe->result;
-
-    if (p.renderer)
-        delete p.renderer;
-    p.renderer = NULL;
-
+    settings->PipelineUpdated(pipe);
     UpdatePlots();
     ResetView();
-
-    settings->UpdateFromPipeline(pipe);
 }
 
 // ****************************************************************************
@@ -103,10 +81,12 @@ EL2DWindow::PipelineUpdated(int index, Pipeline *pipe)
 void
 EL2DWindow::CurrentPipelineChanged(int index)
 {
+    /*
     currentPipeline = index;
     UpdatePlots();
     if (watchedPipelines[0])
         updateGL();
+        */
 }
 
 
@@ -133,38 +113,18 @@ EL2DWindow::initializeGL()
 bool
 EL2DWindow::UpdatePlots()
 {
-    //cerr << "EL3DWindow::UpdatePlots\n";
+    //cerr << "EL2DWindow::UpdatePlots\n";
     bool shoulddraw = false;
     scene->plots.clear();
-    for (unsigned int i=0;  i<plots.size(); i++)
+    for (unsigned int i=0;  i<settings->plots.size(); i++)
     {
-        bool watchingCurrent = watchedPipelines[0];
-        bool watchingThis = watchedPipelines[i+1];
-        //cerr << "i="<<i<<" watchingCurrent="<<watchingCurrent
-        //     <<" watchingThis="<<watchingThis<<endl;
-        if (!(watchingCurrent && currentPipeline==(int)i) &&
-            !watchingThis)
+        Plot &p = settings->plots[i];
+        if (!p.pipe || !p.pipe->result)
             continue;
-
-        Plot &p = plots[i];
-        if (!p.data)
+        p.CreateRenderer();
+        if (!p.renderer)
             continue;
         shoulddraw = true;
-
-        if (!p.renderer && p.variable_fieldindex >= 0)
-        {
-            p.renderer = new eavlPseudocolorRenderer(p.data, 
-                                                     p.colortable,
-                                                     p.cellset_index < 0 ? "" : p.data->GetCellSet(p.cellset_index)->GetName(),
-                                                     p.data->GetField(p.variable_fieldindex)->GetArray()->GetName());
-        }
-        if (!p.renderer)
-        {
-            p.renderer = new eavlSingleColorRenderer(p.data, 
-                                                     eavlColor::white,
-                                                     p.cellset_index < 0 ? "" : p.data->GetCellSet(p.cellset_index)->GetName());
-        }
-
         scene->plots.push_back(p.renderer);
     }
     return shoulddraw;
@@ -399,27 +359,6 @@ EL2DWindow::mouseReleaseEvent(QMouseEvent *)
 
 
 // ****************************************************************************
-// Method:  EL2DWindow::watchedPipelinesChanged
-//
-// Purpose:
-///   Change which pipelines this window should watch.
-//
-// Arguments:
-//   watched    the new vector of size NUMPIPES+1 for new pipelines watch set
-//
-// Programmer:  Jeremy Meredith
-// Creation:    August 16, 2012
-//
-// Modifications:
-// ****************************************************************************
-void
-EL2DWindow::watchedPipelinesChanged(vector<bool> watched)
-{
-    watchedPipelines = watched;
-    updateGL();
-}
-
-// ****************************************************************************
 // Method:  EL2DWindow::GetSettings
 //
 // Purpose:
@@ -440,96 +379,28 @@ EL2DWindow::GetSettings()
     if (!settings)
     {
         settings = new EL2DWindowSettings;
-        connect(settings, SIGNAL(ColorTableChanged(const QString&)),
-                this, SLOT(SettingsColorTableChanged(const QString&)));
-        connect(settings, SIGNAL(VarChanged(const QString&)),
-                this, SLOT(SettingsVarChanged(const QString&)));
+        connect(settings, SIGNAL(SomethingChanged()),
+                this, SLOT(SomethingChanged()));
     }
     return settings;
 }
 
 // ****************************************************************************
-// Method:  EL2DWindow::SettingsColorTableChanged
+// Method:  
 //
 // Purpose:
-///   Slot for when the color table in the settings has changed.
+///   
 //
 // Arguments:
-//   ct         the new color table name
+//   
 //
 // Programmer:  Jeremy Meredith
-// Creation:    August 20, 2012
+// Creation:    March 12, 2013
 //
 // Modifications:
 // ****************************************************************************
 void
-EL2DWindow::SettingsColorTableChanged(const QString &ct)
+EL2DWindow::SomethingChanged()
 {
-    ///\todo: just prototyping; only affect plot 0
-    plots[0].colortable = ct.toStdString();
-    updateGL();
-}
-
-// ****************************************************************************
-// Method:  EL2DWindow::SettingsVarChanged
-//
-// Purpose:
-///   Slot for when the variable in the settings has changed.
-//
-// Arguments:
-//   var        the new variable name
-//
-// Programmer:  Jeremy Meredith
-// Creation:    August 20, 2012
-//
-// Modifications:
-//   Jeremy Meredith, Thu Nov 29 12:19:56 EST 2012
-//   Try to keep the same cell set selected after an update.
-//
-// ****************************************************************************
-void
-EL2DWindow::SettingsVarChanged(const QString &var)
-{
-    ///\todo: just prototyping; only affect plot 0
-    Plot &p = plots[0];
-    delete p.renderer;
-    p.renderer = NULL;
-    p.variable_fieldindex = -1;
-    p.cellset_index = -1;
-    if (p.data)
-    {
-        for (int i=0; i<p.data->GetNumFields(); i++)
-        {
-            ///\todo: we're taking the *last* field with this name,
-            /// the theory being that e.g. if someone adds an extface
-            /// operator, it uses the same variable name with a new
-            /// cell set later in the lst.  so we want the last cell set.
-            /// this is a bit hack-ish.
-            if (p.data->GetField(i)->GetArray()->GetName() == var.toStdString())
-            {
-                p.variable_fieldindex = i;
-                if (p.data->GetField(i)->GetAssociation() == eavlField::ASSOC_CELL_SET)
-                {
-                    p.cellset_index = p.data->GetField(i)->GetAssocCellSet();
-                }
-                else
-                {
-                    p.cellset_index = p.data->GetNumCellSets()-1;
-                }
-                // don't put a break; here. see above
-            }
-        }
-        if (p.cellset_index == -1)
-        {
-            for (int i=0; i<p.data->GetNumCellSets(); i++)
-            {
-                if (p.data->GetCellSet(i)->GetName() == var.toStdString())
-                {
-                    p.cellset_index = i;
-                    break;
-                }
-            }
-        }
-    }
     updateGL();
 }

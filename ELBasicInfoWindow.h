@@ -30,7 +30,6 @@ class ELBasicInfoWindow : public QWidget
     void FillFromPipeline(Pipeline *p);
   public slots:
     void PipelineUpdated(int index, Pipeline *p);
-    void watchedPipelinesChanged(vector<bool>);
     void CurrentPipelineChanged(int index);
 };
 

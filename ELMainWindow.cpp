@@ -18,7 +18,6 @@
 #include "ELPipelineBuilder.h"
 #include "ELWindowManager.h"
 #include "ELBasicInfoWindow.h"
-#include "EL3DWindow.h"
 
 // ****************************************************************************
 // Constructor:  ELMainWindow::ELMainWindow
@@ -52,8 +51,8 @@ ELMainWindow::ELMainWindow(QWidget *parent) :
     // workspace
     //
     pipelineBuilder = new ELPipelineBuilder(topSplitter);
-    connect(pipelineBuilder, SIGNAL(pipelineUpdated(int, Pipeline*)),
-            this, SLOT(PipelineUpdated(int, Pipeline*)));
+    connect(pipelineBuilder, SIGNAL(pipelineUpdated(Pipeline*)),
+            this, SLOT(PipelineUpdated(Pipeline*)));
 
     //
     // window settings
@@ -78,7 +77,7 @@ ELMainWindow::ELMainWindow(QWidget *parent) :
     setCentralWidget(topSplitter);
 
     // I guess we want to start with a 3D window
-    windowMgr->ChangeWindowType(0, "3D View");
+    windowMgr->ChangeWindowType(0, "2D View");
 }
 
 // ****************************************************************************
@@ -192,7 +191,7 @@ ELMainWindow::OpenFile(const QString &filename)
 // Modifications:
 // ****************************************************************************
 void
-ELMainWindow::PipelineUpdated(int, Pipeline *)
+ELMainWindow::PipelineUpdated(Pipeline *)
 {
     // currently useless
 }
@@ -214,8 +213,8 @@ ELMainWindow::PipelineUpdated(int, Pipeline *)
 void
 ELMainWindow::WindowAdded(QWidget *w)
 {
-    connect(pipelineBuilder, SIGNAL(pipelineUpdated(int, Pipeline*)),
-            w, SLOT(PipelineUpdated(int, Pipeline*)));    
+    connect(pipelineBuilder, SIGNAL(pipelineUpdated(Pipeline*)),
+            w, SLOT(PipelineUpdated(Pipeline*)));    
     connect(pipelineBuilder, SIGNAL(CurrentPipelineChanged(int)),
             w, SLOT(CurrentPipelineChanged(int)));
 }

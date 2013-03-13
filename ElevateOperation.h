@@ -38,6 +38,10 @@ class ElevateOperation : public Operation
     {
         return "Elevate";
     }
+    virtual std::string GetOperationShortName()
+    {
+        return "elev";
+    }
     virtual std::string GetOperationInfo()
     {
         return atts->field;

@@ -9,6 +9,7 @@ class ELSources;
 class QGroupBox;
 class QTreeWidgetItem;
 class QTreeWidget;
+class QComboBox;
 
 // ****************************************************************************
 // Class:  ELPipelineBuilder
@@ -30,12 +31,13 @@ class ELPipelineBuilder : public QWidget
     std::map<QString, QWidget*> opSettingsWidgets;
 
   signals:
-    void pipelineUpdated(int index, Pipeline *pipe);
+    void pipelineUpdated(Pipeline *pipe);
     void CurrentPipelineChanged(int);
 
   public:
     ELPipelineBuilder(QWidget *parent);
     void addSource(const std::string &fn, eavlImporter *imp);
+    void addPipeline();
     void rebuildPipelineDisplay();
 
   public slots:
@@ -51,6 +53,7 @@ class ELPipelineBuilder : public QWidget
     ELSources *sourceSettings;
     QTreeWidget *tree;
     QGroupBox *settingsGroup;
+    QComboBox *pipelineChooser;
 };
 
 #endif

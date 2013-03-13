@@ -1,3 +1,4 @@
+#if 0
 // Copyright 2012-2013 UT-Battelle, LLC.  See LICENSE.txt for more information.
 #ifndef EL_1D_WINDOW_H
 #define EL_1D_WINDOW_H
@@ -142,4 +143,5 @@ class EL1DWindow : public QGLWidget
 
 
 
+#endif
 #endif

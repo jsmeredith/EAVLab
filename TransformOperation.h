@@ -72,6 +72,10 @@ class TransformOperation : public Operation
     {
         return "Transform";
     }
+    virtual std::string GetOperationShortName()
+    {
+        return "xform";
+    }
     virtual std::string GetOperationInfo()
     {
         ostringstream os;

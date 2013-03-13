@@ -7,8 +7,6 @@
 #include "Operation.h"
 #include <QFileInfo>
 
-///\todo: hack; we're defining a fixed number of global pipelines
-#define NUMPIPES 4
 struct Pipeline;
 
 // ****************************************************************************
@@ -24,7 +22,7 @@ struct Pipeline;
 // ****************************************************************************
 struct Source
 {
-    enum SourceType { File, Geometry, Pipe };
+    enum SourceType { File, Pipe, Geometry };
     SourceType    sourcetype;
 
     Pipeline     *source_pipe;
@@ -96,6 +94,11 @@ struct Pipeline
   public:
     Pipeline() : source(new Source), result(NULL)
     {
+    }
+
+    string GetName()
+    {
+        return "testname";
     }
 
     vector<string> GetVariables()

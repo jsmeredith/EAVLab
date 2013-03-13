@@ -39,18 +39,18 @@ ELPipelineBuilder::ELPipelineBuilder(QWidget *parent)
 
     // Top layout
     QGridLayout *topLayout = new QGridLayout(this);
-    QComboBox *pipelineChooser = new QComboBox(this);
-    pipelineChooser->addItem("first pipeline");
-    pipelineChooser->addItem("second pipeline");
-    pipelineChooser->addItem("some other pipeline");
-    pipelineChooser->addItem("yes, I want some names here");
+    pipelineChooser = new QComboBox(this);
+    pipelineChooser->addItem("");
     connect(pipelineChooser, SIGNAL(activated(int)), 
             this, SLOT(activatePipeline(int)));
     topLayout->addWidget(new QLabel("Pipeline: ", this), 0,0, 1,1);
     topLayout->addWidget(pipelineChooser, 0,1, 1,1);
 
+    QPushButton *newPipelineBtn = new QPushButton("New Pipeline", this);
+    topLayout->addWidget(newPipelineBtn, 1,0, 1,2);
+
     QSplitter *topSplitter = new QSplitter(Qt::Vertical, this);
-    topLayout->addWidget(topSplitter, 1, 0, 1, 2);
+    topLayout->addWidget(topSplitter, 3, 0, 1, 2);
 
     QGroupBox *pipelineGroup = new QGroupBox("Pipeline",
                                              topSplitter);
@@ -123,16 +123,12 @@ ELPipelineBuilder::ELPipelineBuilder(QWidget *parent)
             this, SLOT(sourceUpdated()));
     settingsLayout->addWidget(sourceSettings);
 
-    // ---
-    ///\todo: for now, let's create a fixed number of pipelines
-    Pipeline::allPipelines.push_back(new Pipeline);
-    Pipeline::allPipelines.push_back(new Pipeline);
-    Pipeline::allPipelines.push_back(new Pipeline);
-    Pipeline::allPipelines.push_back(new Pipeline);
-    activatePipeline(0);
-
     topSplitter->setStretchFactor(0,30);
     topSplitter->setStretchFactor(1,50);
+
+    // add one pipeline
+    Pipeline::allPipelines.push_back(new Pipeline);
+    activatePipeline(0);
 }
 
 
@@ -377,7 +373,7 @@ ELPipelineBuilder::executePipeline()
         return;
     }
 
-    emit pipelineUpdated(currentPipeline, pipeline);
+    emit pipelineUpdated(pipeline);
 }
 
 // ****************************************************************************
@@ -406,6 +402,9 @@ ELPipelineBuilder::sourceUpdated()
     QTreeWidgetItem *sourceItem = tree->topLevelItem(0);
     sourceItem->setText(0, pipeline->source->GetSourceType().c_str());
     sourceItem->setText(1, pipeline->source->GetSourceInfo().c_str());
+
+    pipelineChooser->setItemText(currentPipeline,
+                                 pipeline->GetName().c_str());
 }
 
 // ****************************************************************************

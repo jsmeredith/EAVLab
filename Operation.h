@@ -42,6 +42,8 @@ class Operation
     eavlDataSet *GetOutput() { return output; }
     /// Get the user-visible name for the operation.
     virtual std::string GetOperationName() = 0;
+    /// Get a very concise name for the operation (3-5 characters).
+    virtual std::string GetOperationShortName() = 0;
     /// Get a short string describing the settings for this operation.
     virtual std::string GetOperationInfo() = 0;
 };

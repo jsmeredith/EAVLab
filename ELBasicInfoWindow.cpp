@@ -25,10 +25,6 @@ ELBasicInfoWindow::ELBasicInfoWindow(ELWindowManager *parent)
     // this doesn't work; events like mouse press aren't getting to the 
     // filter (and it's not just because of read-only!)
     topLayout->addWidget(info);
-
-
-    ///\todo: hack: assuming 4 pipelines
-    watchedPipelines.resize(5, false);
 }
 
 
@@ -116,28 +112,6 @@ ELBasicInfoWindow::FillFromPipeline(Pipeline *p)
         p->result->PrintSummary(out);
         info->insertPlainText(out.str().c_str());
     }
-}
-
-// ****************************************************************************
-// Method:  ELBasicInfoWindow::watchedPipelinesChanged
-//
-// Purpose:
-///   Change which pipelines this window should watch.
-//
-// Arguments:
-//   watched    the new vector of size NUMPIPES+1 for new pipelines watch set
-//
-// Programmer:  Jeremy Meredith
-// Creation:    August 16, 2012
-//
-// Modifications:
-// ****************************************************************************
-void
-ELBasicInfoWindow::watchedPipelinesChanged(vector<bool> watched)
-{
-    watchedPipelines = watched;
-    ///\todo: currently this window only watched the current pipeline
-    /// so this setting is ignored
 }
 
 // ****************************************************************************

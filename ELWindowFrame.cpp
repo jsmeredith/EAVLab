@@ -44,45 +44,6 @@ ELWindowFrame::ELWindowFrame(int i, ELWindowManager *parent)
             this, SLOT(WindowTypeChanged(const QString &)));
     topLayout->addWidget(changeTypeList, 0,1);
 
-    //
-    // pipeline selection
-    //
-    QPushButton *pipeButton = new QPushButton("Visible Pipelines", this);
-    topLayout->addWidget(pipeButton, 0,2);
-
-    ///\todo: hack: assuming 4 pipelines
-    QMenu *pipelineMenu = new QMenu();
-    QAction *p_cur = pipelineMenu->addAction("current pipeline");
-    p_cur->setCheckable(true);
-    p_cur->setChecked(true);
-    p_cur->setData(-1);
-    pipelineMenu->addSeparator();
-    QAction *p_0 = pipelineMenu->addAction("pipeline #1's name");
-    QAction *p_1 = pipelineMenu->addAction("pipeline #2's name");
-    QAction *p_2 = pipelineMenu->addAction("pipeline #3's name");
-    QAction *p_3 = pipelineMenu->addAction("pipeline #4's name");
-    p_0->setCheckable(true);
-    p_0->setData(0);
-    p_1->setCheckable(true);
-    p_1->setData(1);
-    p_2->setCheckable(true);
-    p_2->setData(2);
-    p_3->setCheckable(true);
-    p_3->setData(3);
-    connect(p_cur, SIGNAL(toggled(bool)),
-            this, SLOT(pipelineChoiceToggled(bool)));
-    connect(p_0, SIGNAL(toggled(bool)),
-            this, SLOT(pipelineChoiceToggled(bool)));
-    connect(p_1, SIGNAL(toggled(bool)),
-            this, SLOT(pipelineChoiceToggled(bool)));
-    connect(p_2, SIGNAL(toggled(bool)),
-            this, SLOT(pipelineChoiceToggled(bool)));
-    connect(p_3, SIGNAL(toggled(bool)),
-            this, SLOT(pipelineChoiceToggled(bool)));
-    watchedPipelines.resize(5, false); // the current one + 4 others
-    watchedPipelines[0] = true;
-
-    pipeButton->setMenu(pipelineMenu);
 
     SetActive(false);
 }
@@ -215,12 +176,6 @@ ELWindowFrame::SetWindow(QWidget *w)
     }
     win = w;
     topLayout->addWidget(w, 1, 0, 2, 3);
-
-    // is this really the cleanest way to tell a new window
-    // which pipelines it's watching??
-    connect(this, SIGNAL(watchedPipelinesChanged(vector<bool>)),
-            win, SLOT(watchedPipelinesChanged(vector<bool>)));
-    emit watchedPipelinesChanged(watchedPipelines);
 }
 
 // ****************************************************************************
@@ -266,37 +221,6 @@ ELWindowFrame::activeToggled(bool checked)
     else
         manager->SetActiveWindowFrame(NULL);
 }
-
-// ****************************************************************************
-// Method:  ELWindowFrame::
-//
-// Purpose:
-///   Slot for when one of the piplelines watch state is changed.
-//
-// Arguments:
-//   checked    the new state
-//
-// Programmer:  Jeremy Meredith
-// Creation:    August  3, 2012
-//
-// Modifications:
-// ****************************************************************************
-void
-ELWindowFrame::pipelineChoiceToggled(bool checked)
-{
-    QAction* action = qobject_cast<QAction*>(sender());
-    if (!action)
-        return;
-
-    if (action->data().isValid())
-    {
-        int pipe = action->data().toInt();
-        //cerr << "setting pipe "<<pipe<<" watch to "<<checked<<endl;
-        watchedPipelines[pipe+1] = checked;
-        emit watchedPipelinesChanged(watchedPipelines);
-    }
-}
-
 
 // ****************************************************************************
 // Method:  ELWindowFrame::WindowTypeChanged

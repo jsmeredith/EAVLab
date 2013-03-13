@@ -71,6 +71,10 @@ class HistogramOperation : public Operation
     {
         return "Histogram";
     }
+    virtual std::string GetOperationShortName()
+    {
+        return "hist";
+    }
     virtual std::string GetOperationInfo()
     {
         ostringstream os;

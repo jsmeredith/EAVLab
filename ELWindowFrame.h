@@ -37,7 +37,6 @@ class ELWindowFrame : public QWidget
     QGridLayout *topLayout;
     QPushButton *activateButton;
     QComboBox *changeTypeList;
-    std::vector<bool> watchedPipelines;
   public:
     ELWindowFrame(int index, ELWindowManager *parent);
     void SetActive(bool);
@@ -47,10 +46,8 @@ class ELWindowFrame : public QWidget
     QWidget *GetWindow();
   public slots:
     void activeToggled(bool);
-    void pipelineChoiceToggled(bool);
     void WindowTypeChanged(const QString &);
   signals:
-    void watchedPipelinesChanged(vector<bool>);
     void ChangeWindowType(int i, const QString &);
 };
 

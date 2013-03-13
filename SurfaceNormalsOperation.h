@@ -73,6 +73,10 @@ class SurfaceNormalsOperation : public Operation
     {
         return "SurfaceNormals";
     }
+    virtual std::string GetOperationShortName()
+    {
+        return "norm";
+    }
     virtual std::string GetOperationInfo()
     {
         if (atts->nodal)

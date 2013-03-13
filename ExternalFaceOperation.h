@@ -33,6 +33,10 @@ class ExternalFaceOperation : public Operation
     {
         return "ExternalFace";
     }
+    virtual std::string GetOperationShortName()
+    {
+        return "ext";
+    }
     virtual std::string GetOperationInfo()
     {
         return "-";

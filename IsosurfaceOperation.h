@@ -67,6 +67,10 @@ class IsosurfaceOperation : public Operation
     {
         return "Isosurface";
     }
+    virtual std::string GetOperationShortName()
+    {
+        return "iso";
+    }
     virtual std::string GetOperationInfo()
     {
         ostringstream os;
