@@ -105,11 +105,11 @@ ELBasicInfoWindow::FillFromPipeline(Pipeline *p)
                          QString::number(importer->GetMeshList().size()) 
                           + " meshes<br>");
     }
-    if (p->result)
+    if (p->results.size() > 0)
     {
         info->insertHtml("<br><b>Execution Result Follows:</b><br><br>");
         ostringstream out;
-        p->result->PrintSummary(out);
+        p->results.back()->PrintSummary(out);
         info->insertPlainText(out.str().c_str());
     }
 }

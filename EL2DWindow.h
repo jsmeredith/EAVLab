@@ -37,6 +37,8 @@ class EL2DPlotSettings : public QWidget
     QComboBox *varCombo;
     QComboBox *ctCombo;
     Plot *plot;
+    vector<string> cellsets_for_var;
+    vector<string> fields_for_var;
   public:
     EL2DPlotSettings(QWidget *p) : QWidget(p)
     {
@@ -104,13 +106,45 @@ class EL2DPlotSettings : public QWidget
         if (!p)
             return;
 
-        vector<string> vars = p->GetVariables();
+        DSInfo dsinfo = p->GetVariables(-1);
+        varCombo->addItem("Points");
+        cellsets_for_var.push_back("");
+        fields_for_var.push_back("");
+
+        for (int i=0; i<dsinfo.nodalfields.size(); ++i)
+        {
+            varCombo->addItem(QString("      ") + dsinfo.nodalfields[i].c_str());
+            cellsets_for_var.push_back("");
+            fields_for_var.push_back(dsinfo.nodalfields[i]);
+        }
+
+        for (int k=0; k<dsinfo.cellsets.size(); ++k)
+        {
+            string csname = dsinfo.cellsets[k];
+            varCombo->addItem(csname.c_str());
+            cellsets_for_var.push_back(dsinfo.cellsets[k]);
+            fields_for_var.push_back("");
+            for (int i=0; i<dsinfo.nodalfields.size(); ++i)
+            {
+                varCombo->addItem(QString("      ") + dsinfo.nodalfields[i].c_str());
+                cellsets_for_var.push_back(csname);
+                fields_for_var.push_back(dsinfo.nodalfields[i]);
+            }
+            for (int i=0; i<dsinfo.cellsetfields[csname].size(); ++i)
+            {
+                varCombo->addItem(QString("      ") + dsinfo.cellsetfields[csname][i].c_str());
+                cellsets_for_var.push_back(csname);
+                fields_for_var.push_back(dsinfo.cellsetfields[csname][i]);
+            }
+        }
+        /*
         for (size_t i = 0; i < vars.size(); i++)
         {
             varCombo->addItem(vars[i].c_str());
             if (plot->field == vars[i].c_str())
                 newindex = i;
         }
+        */
         if (newindex >= 0)
             varCombo->setCurrentIndex(newindex);
 
@@ -168,52 +202,15 @@ class EL2DPlotSettings : public QWidget
         // here, we set the field index and cell index given a field name
         delete plot->renderer;
         plot->renderer = NULL;
-        plot->field = "";
-        plot->cellset = "";
-        if (plot->pipe && plot->pipe->result)
-        {
-            eavlDataSet *data = plot->pipe->result;
-            for (int i=0; i<data->GetNumFields(); i++)
-            {
-                ///\todo: we're taking the *last* field with this name,
-                /// the theory being that e.g. if someone adds an extface
-                /// operator, it uses the same variable name with a new
-                /// cell set later in the lst.  so we want the last cell set.
-                /// this is a bit hack-ish.
-                ///\todo: also a bit hackish: we're assuming the variable
-                /// name we're given here might be a cell set so you
-                /// have to find the field/cell set for the plot.  change
-                /// this (probably) to present a set of cell sets/field
-                /// name combinations to the user explicitly (e.g. a tree).
-                if (data->GetField(i)->GetArray()->GetName() == var.toStdString())
-                {
-                    plot->field = var.toStdString();
-                    if (data->GetField(i)->GetAssociation() == eavlField::ASSOC_CELL_SET)
-                    {
-                        plot->cellset = data->GetCellSet(data->GetField(i)->GetAssocCellSet())->GetName();
-                    }
-                    else
-                    {
-                        // we need some sort of cell set to plot this
-                        // variable on; for now, choose the points.
-                        // (before, we chose the final cell set)
-                        plot->cellset = "";
-                    }
-                    // don't put a break; here. see above
-                }
-            }
-            if (plot->cellset == "")
-            {
-                for (int i=0; i<data->GetNumCellSets(); i++)
-                {
-                    if (data->GetCellSet(i)->GetName() == var.toStdString())
-                    {
-                        plot->cellset = var.toStdString();
-                        break;
-                    }
-                }
-            }
-        }
+        int index = varCombo->currentIndex();
+        if (index < 0 || index >= cellsets_for_var.size())
+            plot->cellset = "";
+        else
+            plot->cellset = cellsets_for_var[index];
+        if (index < 0 || index >= fields_for_var.size())
+            plot->field = "";
+        else
+            plot->field = fields_for_var[index];
 
         emit SomethingChanged();
     }
@@ -320,7 +317,7 @@ class EL2DWindowSettings : public QWidget
             Plot &p = plots[i];
             if (p.pipe == pipe)
             {
-                p.UpdateDataSet(pipe->result);
+                p.UpdateDataSet(pipe->results.back());
             }
         }
 

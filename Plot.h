@@ -34,7 +34,7 @@ struct Plot
 
         if (field != "")
         {
-            renderer = new eavlPseudocolorRenderer(pipe->result, 
+            renderer = new eavlPseudocolorRenderer(pipe->results.back(), 
                                                    colortable,
                                                    cellset,
                                                    field);
@@ -42,7 +42,7 @@ struct Plot
         }
         else
         {
-            renderer = new eavlSingleColorRenderer(pipe->result, 
+            renderer = new eavlSingleColorRenderer(pipe->results.back(), 
                                                    eavlColor::white,
                                                    cellset);
         }

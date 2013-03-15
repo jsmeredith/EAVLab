@@ -6,6 +6,7 @@
 #include "eavlImporter.h"
 #include "Operation.h"
 #include <QFileInfo>
+#include "DSInfo.h"
 
 struct Pipeline;
 
@@ -85,14 +86,17 @@ struct Pipeline
 {
     Source *source;
     std::vector<Operation*> ops;
-    eavlDataSet *result;
+    /// results should have one more item in it than the ops array.
+    /// e.g. ops[i] uses results[i] as input and outputs to results[i+1].
+    /// result[0] is the initial data set.
+    std::vector<eavlDataSet*> results;
 
   public:
     ///\todo: hack: everyone needs to access these
     static vector<Pipeline*> allPipelines;
 
   public:
-    Pipeline() : source(new Source), result(NULL)
+    Pipeline() : source(new Source)
     {
     }
 
@@ -101,83 +105,104 @@ struct Pipeline
         return "testname";
     }
 
-    vector<string> GetVariables()
+    DSInfo GetVariables(int index)
     {
-        if (source->sourcetype != Source::File)
-            throw eavlException("can only execute from source file");
-
-        if (!source->source_file)
-            throw eavlException("no source file selected");
-
-        vector<string> vars;
-        vars.push_back("points");
-
-        vector<string> cellsets = source->source_file->GetCellSetList(source->mesh);
-        vars.insert(vars.end(), cellsets.begin(), cellsets.end());
-
-        vector<string> sourcevars = source->source_file->GetFieldList(source->mesh);
-        vars.insert(vars.end(), sourcevars.begin(), sourcevars.end());
-
-        /// ask each operator what vars it can create, too.
-        /// \todo: how does it know what vars will be input to it?
-        /// well, now we need the metadata (forward part of contract?)
-        for (unsigned int i=0; i<ops.size(); i++)
+        DSInfo dsinfo;
+        try
         {
-            vector<string> opvars = ops[i]->GetOutputVariables();
-            vars.insert(vars.end(), opvars.begin(), opvars.end());
+            Execute();
         }
-        return vars;
+        catch (const eavlException &e)
+        {
+            cerr << "Error: " <<e.GetErrorText() << endl;
+            return dsinfo;
+        }
+
+        if (results.size() == 0)
+            return dsinfo;
+
+        eavlDataSet *ds = results.back();
+        for (int j=0; j<ds->GetNumFields(); ++j)
+        {
+            eavlField *f = ds->GetField(j);
+            if (f->GetAssociation() == eavlField::ASSOC_POINTS)
+                dsinfo.nodalfields.push_back(f->GetArray()->GetName());
+        }
+
+
+        for (int i=0; i<ds->GetNumCellSets(); ++i)
+        {
+            eavlCellSet *cs = ds->GetCellSet(i);
+            dsinfo.cellsets.push_back(cs->GetName());
+            for (int j=0; j<ds->GetNumFields(); ++j)
+            {
+                eavlField *f = ds->GetField(j);
+                if (f->GetAssociation() == eavlField::ASSOC_CELL_SET &&
+                    f->GetAssocCellSet() == i)
+                    dsinfo.cellsetfields[cs->GetName()].push_back(f->GetArray()->GetName());
+            }
+        }
+        return dsinfo;
     }
 
     void Execute()
     {
-        ///\todo: cache some stuff, at least the reading
+        results.clear();
 
-        if (source->sourcetype != Source::File)
-            throw eavlException("can only execute from source file");
+        if (results.size() == 0)
+        {
+            if (source->sourcetype != Source::File)
+                throw eavlException("can only execute from source file");
 
-        if (!source->source_file)
-            throw eavlException("no source file selected");
+            if (!source->source_file)
+                throw eavlException("no source file selected");
 
 #if 0
-        // find the variables needed for each operation
-        std::vector<std::string> vars;
-        for (int i=ops.size()-1; i>=0; --i)
-        {
-            std::vector<std::string> newvars;
-            newvars = ops[i]->GetNeededVariables();
-            vars.insert(vars.end(), newvars.begin(), newvars.end());
-        }
+            // find the variables needed for each operation
+            std::vector<std::string> vars;
+            for (int i=ops.size()-1; i>=0; --i)
+            {
+                std::vector<std::string> newvars;
+                newvars = ops[i]->GetNeededVariables();
+                vars.insert(vars.end(), newvars.begin(), newvars.end());
+            }
 #else
-        ///\todo: big hack: always read everything from the file;
-        /// we need to change this so it only reads what's asked of it
-        std::vector<std::string> vars = source->source_file->GetFieldList(source->mesh);
+            ///\todo: big hack: always read everything from the file;
+            /// we eventuall should change this so it only reads what's
+            /// asked of it
+            std::vector<std::string> vars = source->source_file->GetFieldList(source->mesh);
 #endif
 
 
-        // read the mesh and vars
-        ///\todo: only reading chunk 0 for now
-        eavlDataSet *ds = source->source_file->GetMesh(source->mesh, 0);
+            // read the mesh and vars
+            ///\todo: only reading chunk 0 for now
+            eavlDataSet *ds = source->source_file->GetMesh(source->mesh, 0);
 
-        // \todo: hack: create a new data set structure so our mutators
-        // don't quite so easily mess with the one in the importer.
-        ds = ds->CreateShallowCopy();
-        for (size_t i=0; i<vars.size(); i++)
-        {
-            eavlField *f = source->source_file->GetField(vars[i], source->mesh, 0);
-            ds->AddField(f);
+            ds = ds->CreateShallowCopy();
+            for (size_t i=0; i<vars.size(); i++)
+            {
+                eavlField *f = source->source_file->GetField(vars[i], source->mesh, 0);
+                ds->AddField(f);
+            }
+            results.push_back(ds);
         }
 
-        // execute each operation
-        for (size_t i=0; i<ops.size(); i++)
+        while (results.size() <= ops.size())
         {
-            ops[i]->SetInput(ds);
-            ops[i]->Execute();
-            ds = ops[i]->GetOutput();
-        }
+            eavlDataSet *ds = results.back();
+            cerr << "Executing next op, summary = \n";
+            ds->PrintSummary(cerr);
 
-        result = ds;
-        //result->PrintSummary(cout);
+            // \todo: hack: create a new data set structure so our mutators
+            // don't quite so easily mess with the one in the importer.
+            ds = ds->CreateShallowCopy();
+
+            // execute each operation
+            Operation *op = ops[results.size()-1];
+            op->SetInput(ds);
+            op->Execute();
+            results.push_back(op->GetOutput());
+        }
     }
 };
 

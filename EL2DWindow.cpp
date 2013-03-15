@@ -119,7 +119,7 @@ EL2DWindow::UpdatePlots()
     for (unsigned int i=0;  i<settings->plots.size(); i++)
     {
         Plot &p = settings->plots[i];
-        if (!p.pipe || !p.pipe->result)
+        if (!p.pipe || p.pipe->results.size() == 0)
             continue;
         p.CreateRenderer();
         if (!p.renderer)
