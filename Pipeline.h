@@ -147,9 +147,14 @@ struct Pipeline
         return dsinfo;
     }
 
-    void Execute()
+    void ClearResults()
     {
         results.clear();
+    }
+
+    void Execute()
+    {
+        //cerr << "\n\n>>>>EXECUTE\n\n\n";
 
         if (results.size() == 0)
         {
@@ -203,7 +208,7 @@ struct Pipeline
             op->Execute();
             results.push_back(op->GetOutput());
 
-            //cerr << "Executed next op, summary = \n";
+            //cerr << "Executed op to generate result["<<results.size()<<", summary = \n";
             //op->GetOutput()->PrintSummary(cerr);
         }
     }

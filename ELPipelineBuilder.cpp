@@ -428,6 +428,9 @@ ELPipelineBuilder::operatorUpdated(Attribute *settings)
     if (currentPipeline < 0 || currentPipeline >= (int)Pipeline::allPipelines.size())
         return;
     Pipeline *pipeline = Pipeline::allPipelines[currentPipeline];
+    
+    // a bit brute force, but hopefully effective:
+    pipeline->ClearResults();
 
     // find the operator with these settings; a bit of a hack
     // if we changed this to get info about which operator
