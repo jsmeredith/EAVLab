@@ -12,7 +12,7 @@
 #include <QPushButton>
 
 #include "ELBasicInfoWindow.h"
-//#include "EL3DWindow.h"
+#include "EL3DWindow.h"
 #include "EL2DWindow.h"
 //#include "EL1DWindow.h"
 #include "ELEmptyWindow.h"
@@ -556,7 +556,7 @@ ELWindowManager::GetWindow(int index)
 void
 ELWindowManager::ChangeWindowType(int index, const QString &type)
 {
-    /*if (type == "3D View")
+    if (type == "3D View")
     {
         EL3DWindow *newwin = new EL3DWindow(this);
         QWidget *newwinsettings = newwin->GetSettings();
@@ -564,7 +564,7 @@ ELWindowManager::ChangeWindowType(int index, const QString &type)
         windowframes[index]->SetWindow(newwin);
         emit WindowAdded(windowframes[index]->GetWindow());
     }
-    else*/ if (type == "2D View")
+    else if (type == "2D View")
     {
         EL2DWindow *newwin = new EL2DWindow(this);
         QWidget *newwinsettings = newwin->GetSettings();

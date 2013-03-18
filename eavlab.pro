@@ -15,6 +15,7 @@ SOURCES += main.cpp\
     ELEmptyWindow.cpp \
     ELWindowFrame.cpp \
     EL2DWindow.cpp \
+    EL3DWindow.cpp \
     ELBasicInfoWindow.cpp \
     ELPipelineBuilder.cpp \
     ELSources.cpp \
@@ -22,7 +23,6 @@ SOURCES += main.cpp\
     Pipeline.cpp \
     XMLTools.cpp
 #    EL1DWindow.cpp \
-#    EL3DWindow.cpp \
 
 
 EAVLROOT = $$(EAVL)

@@ -13,12 +13,16 @@ struct Plot
     string colortable;
     string cellset;
     string field;
+    eavlColor color;
+    bool wireframe;
     eavlRenderer *renderer;
 
     Plot() : pipe(NULL),
              colortable("default"),
              cellset(""),
              field(""),
+             color(eavlColor::white),
+             wireframe(false),
              renderer(NULL)
     {
     }
@@ -36,6 +40,7 @@ struct Plot
         {
             renderer = new eavlPseudocolorRenderer(pipe->results.back(), 
                                                    colortable,
+                                                   wireframe,
                                                    cellset,
                                                    field);
             return;
@@ -43,7 +48,8 @@ struct Plot
         else
         {
             renderer = new eavlSingleColorRenderer(pipe->results.back(), 
-                                                   eavlColor::white,
+                                                   color,
+                                                   wireframe,
                                                    cellset);
         }
         

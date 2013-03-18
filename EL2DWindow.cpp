@@ -378,7 +378,7 @@ EL2DWindow::GetSettings()
 {
     if (!settings)
     {
-        settings = new EL2DWindowSettings;
+        settings = new ELPlotList;
         connect(settings, SIGNAL(SomethingChanged()),
                 this, SLOT(SomethingChanged()));
     }
