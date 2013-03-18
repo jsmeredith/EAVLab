@@ -142,6 +142,8 @@ struct Pipeline
                     dsinfo.cellsetfields[cs->GetName()].push_back(f->GetArray()->GetName());
             }
         }
+
+        //cerr << ">> GetVariables <<\n"; dsinfo.Print(cerr);
         return dsinfo;
     }
 
@@ -168,7 +170,7 @@ struct Pipeline
             }
 #else
             ///\todo: big hack: always read everything from the file;
-            /// we eventuall should change this so it only reads what's
+            /// we eventually should change this so it only reads what's
             /// asked of it
             std::vector<std::string> vars = source->source_file->GetFieldList(source->mesh);
 #endif
@@ -190,8 +192,6 @@ struct Pipeline
         while (results.size() <= ops.size())
         {
             eavlDataSet *ds = results.back();
-            cerr << "Executing next op, summary = \n";
-            ds->PrintSummary(cerr);
 
             // \todo: hack: create a new data set structure so our mutators
             // don't quite so easily mess with the one in the importer.
@@ -202,6 +202,9 @@ struct Pipeline
             op->SetInput(ds);
             op->Execute();
             results.push_back(op->GetOutput());
+
+            //cerr << "Executed next op, summary = \n";
+            //op->GetOutput()->PrintSummary(cerr);
         }
     }
 };

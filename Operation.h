@@ -14,7 +14,7 @@
 // Class:  Operation
 //
 // Purpose:
-///   Base class for an Operation like isosurface or slicee.
+///   Base class for an Operation like isosurface or slice.
 //
 // Programmer:  Jeremy Meredith
 // Creation:    August 9, 2012

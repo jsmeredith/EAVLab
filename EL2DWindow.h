@@ -97,7 +97,6 @@ class EL2DPlotSettings : public QWidget
     void RebuildVarCombo()
     {
         // rebuild the field combo box
-        int newindex = -1;
         varCombo->clear();
 
         if (!plot)
@@ -105,6 +104,9 @@ class EL2DPlotSettings : public QWidget
         Pipeline *p = plot->pipe;
         if (!p)
             return;
+
+        cellsets_for_var.clear();
+        fields_for_var.clear();
 
         DSInfo dsinfo = p->GetVariables(-1);
         varCombo->addItem("Points");
@@ -137,16 +139,25 @@ class EL2DPlotSettings : public QWidget
                 fields_for_var.push_back(dsinfo.cellsetfields[csname][i]);
             }
         }
+
         /*
-        for (size_t i = 0; i < vars.size(); i++)
+        cerr << "++Printing cellsets_for_var\n";
+        for (int i=0; i<cellsets_for_var.size(); ++i)
+            cerr << cellsets_for_var[i] << "      \t:\t" << fields_for_var[i]<<endl;
+            */
+
+        int newindex = -1;
+        for (int i=0; i<cellsets_for_var.size(); ++i)
         {
-            varCombo->addItem(vars[i].c_str());
-            if (plot->field == vars[i].c_str())
+            if (cellsets_for_var[i]==plot->cellset &&
+                fields_for_var[i]==plot->field)
+            {
                 newindex = i;
+                break;
+            }
         }
-        */
         if (newindex >= 0)
-            varCombo->setCurrentIndex(newindex);
+            varCombo->setCurrentIndex(i);
 
         emit SomethingChanged();
     }
@@ -154,6 +165,7 @@ class EL2DPlotSettings : public QWidget
     {
         plot = p;
         RebuildVarCombo();
+
         bool found = false;
         for (int i=0; i<ctCombo->count(); ++i)
         {
@@ -236,9 +248,14 @@ class EL2DWindowSettings : public QWidget
     vector<Plot> plots;
   protected:
 
+    int currentPlotIndex;
     QTreeWidget *plotList;
     QGroupBox *settingsGroup;
     EL2DPlotSettings *plotSettings;
+    QPushButton *newPlotBtn;
+    QPushButton *delPlotBtn;
+    QPushButton *upPlotBtn;
+    QPushButton *downPlotBtn;
   public:
     EL2DWindowSettings() : QWidget(NULL)
     {
@@ -252,25 +269,30 @@ class EL2DWindowSettings : public QWidget
         topLayout->addWidget(plotList, trow,0, 1, 4);
         trow++;
         connect(plotList, SIGNAL(itemSelectionChanged()),
-                this, SLOT(plotSelected()));
+                this, SLOT(plotSelectionChanged()));
 
-        QPushButton *newPlotBtn = new QPushButton("New", this);
+        newPlotBtn = new QPushButton("New", this);
         connect(newPlotBtn, SIGNAL(clicked()),
                 this, SLOT(NewPlot()));
         topLayout->addWidget(newPlotBtn, trow,0);
-        QPushButton *delPlotBtn = new QPushButton("Del", this);
+        delPlotBtn = new QPushButton("Del", this);
         connect(delPlotBtn, SIGNAL(clicked()),
                 this, SLOT(DelPlot()));
         topLayout->addWidget(delPlotBtn, trow,1);
-        QPushButton *upPlotBtn = new QPushButton("Up", this);
+        upPlotBtn = new QPushButton("Up", this);
         connect(upPlotBtn, SIGNAL(clicked()),
                 this, SLOT(UpPlot()));
         topLayout->addWidget(upPlotBtn, trow,2);
-        QPushButton *downPlotBtn = new QPushButton("Down", this);
+        downPlotBtn = new QPushButton("Down", this);
         connect(downPlotBtn, SIGNAL(clicked()),
                 this, SLOT(DownPlot()));
         topLayout->addWidget(downPlotBtn, trow,3);
         trow++;
+
+        newPlotBtn->setEnabled(false);
+        upPlotBtn->setEnabled(false);
+        downPlotBtn->setEnabled(false);
+        delPlotBtn->setEnabled(false);
 
         //
         // Settings
@@ -282,11 +304,26 @@ class EL2DWindowSettings : public QWidget
 
         plotSettings = new EL2DPlotSettings(settingsGroup);
         connect(plotSettings, SIGNAL(SomethingChanged()),
-                this, SIGNAL(SomethingChanged()));
+                this, SLOT(PlotChanged()));
         settingsLayout->addWidget(plotSettings);
         plotSettings->setEnabled(false);
 
         topLayout->setRowStretch(trow, 100);
+
+        // other initialization
+        currentPlotIndex = -1;
+    }
+    void SetItemTextFromPlot(QTreeWidgetItem *item, Plot &p)
+    {
+        item->setText(0, "plot");
+        string cs = p.cellset;
+        if (cs.empty())
+            cs = "Points";
+        if (p.field.empty())
+            item->setText(1, cs.c_str());
+        else
+            item->setText(1, (p.field + " ("+cs+")").c_str());
+        item->setText(2, p.colortable.c_str());
     }
     void UpdatePlotList()
     {
@@ -295,14 +332,13 @@ class EL2DWindowSettings : public QWidget
         {
             Plot &p = plots[i];
             QTreeWidgetItem *item = new QTreeWidgetItem;
-            item->setText(0, "plot");
-            item->setText(1, p.field.c_str());
-            item->setText(2, p.colortable.c_str());
+            SetItemTextFromPlot(item, p);
             plotList->addTopLevelItem(item);
         }
     }
     void PipelineUpdated(Pipeline *pipe)
     {
+        newPlotBtn->setEnabled(true);
         // hackish: add a plot with the current pipeline if
         // they hit execute and don't have any plots yet.
         if (plots.size() == 0)
@@ -325,6 +361,17 @@ class EL2DWindowSettings : public QWidget
         plotSettings->PipelineUpdated(pipe);
     }
   public slots:
+    void PlotChanged()
+    {
+        if (currentPlotIndex >= 0)
+        {
+            Plot &p = plots[currentPlotIndex];
+            QTreeWidgetItem *item = plotList->topLevelItem(currentPlotIndex);
+            SetItemTextFromPlot(item, p);
+        }
+
+        emit SomethingChanged();
+    }
     void NewPlot()
     {
         plots.push_back(Plot());
@@ -367,8 +414,13 @@ class EL2DWindowSettings : public QWidget
         UpdatePlotList();
         emit SomethingChanged();
     }
-    void plotSelected()
+    void plotSelectionChanged()
     {
+        currentPlotIndex = -1;
+        upPlotBtn->setEnabled(false);
+        downPlotBtn->setEnabled(false);
+        delPlotBtn->setEnabled(false);
+
         QList<QTreeWidgetItem*> s = plotList->selectedItems();
         int n = s.size();
         if (n == 0)
@@ -384,10 +436,17 @@ class EL2DWindowSettings : public QWidget
             return;
         }
         QTreeWidgetItem *item = s[0];
-        int rowindex = plotList->indexOfTopLevelItem(item);
+        currentPlotIndex = plotList->indexOfTopLevelItem(item);
+        delPlotBtn->setEnabled(true);
+        if (currentPlotIndex > 0)
+            upPlotBtn->setEnabled(true);
+        if (currentPlotIndex < plots.size() - 1)
+            downPlotBtn->setEnabled(true);
+
+
         ///\todo: ensure 0<=index<nplots
         plotSettings->setEnabled(true);
-        plotSettings->NewPlotSelected(&(plots[rowindex]));
+        plotSettings->NewPlotSelected(&(plots[currentPlotIndex]));
     }
   signals:
     void SomethingChanged();
