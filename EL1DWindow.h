@@ -1,4 +1,3 @@
-#if 0
 // Copyright 2012-2013 UT-Battelle, LLC.  See LICENSE.txt for more information.
 #ifndef EL_1D_WINDOW_H
 #define EL_1D_WINDOW_H
@@ -12,68 +11,12 @@
 #include <eavlDataSet.h>
 #include <Plot.h>
 
+#include "ELPlotList.h"
+
 class eavl1DWindow;
 class eavlScene;
 class Pipeline;
 class eavlRenderer;
-
-// ****************************************************************************
-// Class:  EL1DWindowSettings
-//
-// Purpose:
-///   The settings widget to control options for the EL1DWindow.
-//
-// Programmer:  Jeremy Meredith
-// Creation:    January 16, 2013
-//
-// Modifications:
-// ****************************************************************************
-class EL1DWindowSettings : public QWidget
-{
-    Q_OBJECT
-  protected:
-    QComboBox *varCombo;
-  public:
-    EL1DWindowSettings() : QWidget(NULL)
-    {
-        QGridLayout *topLayout = new QGridLayout(this);
-
-        QComboBox *styleCombo = new QComboBox(this);
-        styleCombo->addItem("Curves");
-        styleCombo->addItem("Bars");
-        topLayout->addWidget(new QLabel("Style:", this), 0,0);
-        topLayout->addWidget(styleCombo, 1,0);
-        connect(styleCombo, SIGNAL(activated(const QString&)),
-                this, SIGNAL(StyleChanged(const QString&)));
-
-        varCombo = new QComboBox(this);
-        connect(varCombo, SIGNAL(activated(const QString&)),
-                this, SIGNAL(VarChanged(const QString&)));
-        topLayout->addWidget(new QLabel("Variable:", this), 2,0);
-        topLayout->addWidget(varCombo, 3,0);
-
-        topLayout->setRowStretch(4, 100);
-    }
-    void UpdateFromPipeline(Pipeline *p)
-    {
-        QString oldvar = varCombo->currentText();
-        int newindex = -1;
-        varCombo->clear();
-        vector<string> vars = p->GetVariables();
-        for (size_t i = 0; i < vars.size(); i++)
-        {
-            varCombo->addItem(vars[i].c_str());
-            if (oldvar == vars[i].c_str())
-                newindex = i;
-        }
-        if (newindex >= 0)
-            varCombo->setCurrentIndex(newindex);
-        emit VarChanged(varCombo->currentText());
-    }
-  signals:
-    void StyleChanged(const QString &);
-    void VarChanged(const QString &);
-};
 
 // ****************************************************************************
 // Class:  EL1DWindow
@@ -90,9 +33,7 @@ class EL1DWindow : public QGLWidget
 {
     Q_OBJECT
   protected:
-    int currentPipeline;
-    std::vector<bool> watchedPipelines;
-    EL1DWindowSettings *settings;
+    ELPlotList *settings;
   public:
     EL1DWindow(ELWindowManager *parent);
     virtual void initializeGL();
@@ -128,20 +69,15 @@ class EL1DWindow : public QGLWidget
     eavl1DWindow *window;
     eavlScene    *scene;
 
-    vector<Plot> plots;
-
   public slots:
     void CurrentPipelineChanged(int index);
-    void PipelineUpdated(int index, Pipeline *p);
-    void watchedPipelinesChanged(vector<bool>);
+    void PipelineUpdated(Pipeline *p);
     void ResetView();
     bool UpdatePlots();
 
-    void SettingsStyleChanged(const QString&);
-    void SettingsVarChanged(const QString&);
+    void SomethingChanged();
 };
 
 
 
-#endif
 #endif

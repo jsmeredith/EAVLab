@@ -399,6 +399,9 @@ ELPipelineBuilder::sourceUpdated()
     if (!pipeline || !pipeline->source)
         return;
 
+    // a bit brute force, but hopefully effective:
+    pipeline->ClearResults();
+
     QTreeWidgetItem *sourceItem = tree->topLevelItem(0);
     sourceItem->setText(0, pipeline->source->GetSourceType().c_str());
     sourceItem->setText(1, pipeline->source->GetSourceInfo().c_str());
@@ -461,6 +464,9 @@ ELPipelineBuilder::deleteCurrentOp()
         return;
 
     Pipeline *pipeline = Pipeline::allPipelines[currentPipeline];
+
+    // a bit brute force, but hopefully effective:
+    pipeline->ClearResults();
 
     QList<QTreeWidgetItem*> s = tree->selectedItems();
     int n = s.size();

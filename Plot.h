@@ -16,15 +16,24 @@ struct Plot
     eavlColor color;
     bool wireframe;
     eavlRenderer *renderer;
+    bool valid;
+
+    // these two are hacks; need a better way to get this info
+    // to create the right renderers for plots....
+    bool oneDimensional;
+    bool barsFor1D;
 
     Plot() : pipe(NULL),
              colortable("default"),
              cellset(""),
              field(""),
-             color(eavlColor::white),
+             color(eavlColor::grey50),
              wireframe(false),
-             renderer(NULL)
+             renderer(NULL),
+             valid(true)
     {
+        oneDimensional = false;
+        barsFor1D = false;
     }
     void UpdateDataSet(eavlDataSet *ds)
     {
@@ -36,23 +45,54 @@ struct Plot
         if (renderer)
             return;
 
-        if (field != "")
+        try
         {
-            renderer = new eavlPseudocolorRenderer(pipe->results.back(), 
-                                                   colortable,
-                                                   wireframe,
-                                                   cellset,
-                                                   field);
-            return;
+            if (oneDimensional)
+            {
+                if (barsFor1D)
+                {
+                    if (field != "")
+                        renderer = new eavlBarRenderer(pipe->results.back(),
+                                                       color,
+                                                       0.10,
+                                                       cellset,
+                                                       field);
+                }
+                else
+                {
+                    if (field != "")
+                        renderer = new eavlCurveRenderer(pipe->results.back(),
+                                                         color,
+                                                         cellset,
+                                                         field);
+                }
+            }
+            else
+            {
+                if (field != "")
+                {
+                    renderer = new eavlPseudocolorRenderer(pipe->results.back(), 
+                                                           colortable,
+                                                           wireframe,
+                                                           cellset,
+                                                           field);
+                    return;
+                }
+                else
+                {
+                    renderer = new eavlSingleColorRenderer(pipe->results.back(), 
+                                                           color,
+                                                           wireframe,
+                                                           cellset);
+                }
+            }
+            valid = true;
         }
-        else
+        catch (...)
         {
-            renderer = new eavlSingleColorRenderer(pipe->results.back(), 
-                                                   color,
-                                                   wireframe,
-                                                   cellset);
+            renderer = NULL;
+            valid = false;
         }
-        
     }
 };
 

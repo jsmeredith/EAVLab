@@ -29,12 +29,15 @@
 class ELSurfacePlotSettings : public QWidget
 {
     Q_OBJECT
+  public: ///\todo: HACK, no public
+    bool oneDimensional;
   protected:
     QComboBox *pipelineCombo;
     QTreeWidget *varChooser;
     QComboBox *ctCombo;
     QPushButton *colorBtn;
     QCheckBox *wireframeChk;
+    QComboBox *styleCombo;
     Plot *plot;
     vector<string> cellsetList;
     vector< vector<string> > fieldList;
@@ -55,8 +58,8 @@ class ELSurfacePlotSettings : public QWidget
                 this, SLOT(PipelineChanged(const QString&)));
 
         varChooser = new QTreeWidget(this);
-        //varChooser->setHeaderLabels(QStringList()<<"Variable"<<"Specs");
-        varChooser->header()->hide();
+        varChooser->setHeaderLabels(QStringList()<<"Variable"<<"Info");
+        //varChooser->header()->hide();
         connect(varChooser, SIGNAL(itemSelectionChanged()),
                 this, SLOT(VarSelectionChanged()));
         topLayout->addWidget(new QLabel("Field:", this), srow,0, 1,2);
@@ -91,6 +94,13 @@ class ELSurfacePlotSettings : public QWidget
         connect(wireframeChk, SIGNAL(stateChanged(int)),
                 this, SLOT(WireframeCheckChanged(int)));
 
+        styleCombo = new QComboBox(this);
+        styleCombo->addItem("Curves");
+        styleCombo->addItem("Bars");
+        topLayout->addWidget(new QLabel("1D Style:", this), srow,0);
+        topLayout->addWidget(styleCombo, srow,1);
+        connect(styleCombo, SIGNAL(activated(const QString&)),
+                this, SLOT(StyleChanged(const QString&)));
     }
     void PipelineUpdated(Pipeline *p)
     {
@@ -136,10 +146,12 @@ class ELSurfacePlotSettings : public QWidget
             selItem = ptsItem;
         for (int i=0; i<dsinfo.nodalfields.size(); ++i)
         {
-            QTreeWidgetItem *fItem = new QTreeWidgetItem(QStringList()<<dsinfo.nodalfields[i].c_str());
+            QTreeWidgetItem *fItem = new QTreeWidgetItem(QStringList()
+                                                         <<dsinfo.nodalfields[i].name.c_str()
+                                                         <<(dsinfo.nodalfields[i].ncomp==1 ? "scalar" : "vector"));
             ptsItem->addChild(fItem);
-            fieldList[fieldList.size()-1].push_back(dsinfo.nodalfields[i]);
-            if (plot->cellset == "" && plot->field == dsinfo.nodalfields[i])
+            fieldList[fieldList.size()-1].push_back(dsinfo.nodalfields[i].name);
+            if (plot->cellset == "" && plot->field == dsinfo.nodalfields[i].name)
                 selItem = fItem;
         }
         ptsItem->setExpanded(true);
@@ -147,27 +159,33 @@ class ELSurfacePlotSettings : public QWidget
 
         for (int k=0; k<dsinfo.cellsets.size(); ++k)
         {
-            string csname = dsinfo.cellsets[k];
-            QTreeWidgetItem *csItem = new QTreeWidgetItem(QStringList()<<csname.c_str());
+            string csname = dsinfo.cellsets[k].name;
+            QTreeWidgetItem *csItem = new QTreeWidgetItem(QStringList()
+                                                          <<csname.c_str()
+                                                          <<QString().sprintf("%dD",dsinfo.cellsets[k].topodim));
             varChooser->addTopLevelItem(csItem);
-            cellsetList.push_back(dsinfo.cellsets[k]);
+            cellsetList.push_back(csname);
             fieldList.push_back(vector<string>());
             if (plot->cellset == csname && plot->field == "")
                 selItem = csItem;
             for (int i=0; i<dsinfo.nodalfields.size(); ++i)
             {
-                QTreeWidgetItem *fItem = new QTreeWidgetItem(QStringList()<<dsinfo.nodalfields[i].c_str());
+                QTreeWidgetItem *fItem = new QTreeWidgetItem(QStringList()
+                                                             <<dsinfo.nodalfields[i].name.c_str()
+                                                             <<(dsinfo.nodalfields[i].ncomp==1 ? "scalar" : "vector"));
                 csItem->addChild(fItem);
-                fieldList[fieldList.size()-1].push_back(dsinfo.nodalfields[i]);
-                if (plot->cellset == csname && plot->field == dsinfo.nodalfields[i])
+                fieldList[fieldList.size()-1].push_back(dsinfo.nodalfields[i].name);
+                if (plot->cellset == csname && plot->field == dsinfo.nodalfields[i].name)
                     selItem = fItem;
             }
             for (int i=0; i<dsinfo.cellsetfields[csname].size(); ++i)
             {
-                QTreeWidgetItem *fItem = new QTreeWidgetItem(QStringList()<<dsinfo.cellsetfields[csname][i].c_str());
+                QTreeWidgetItem *fItem = new QTreeWidgetItem(QStringList()
+                                                             <<dsinfo.cellsetfields[csname][i].name.c_str()
+                                                             <<(dsinfo.cellsetfields[csname][i].ncomp==1 ? "scalar" : "vector"));
                 csItem->addChild(fItem);
-                fieldList[fieldList.size()-1].push_back(dsinfo.cellsetfields[csname][i]);
-                if (plot->cellset == csname && plot->field == dsinfo.cellsetfields[csname][i])
+                fieldList[fieldList.size()-1].push_back(dsinfo.cellsetfields[csname][i].name);
+                if (plot->cellset == csname && plot->field == dsinfo.cellsetfields[csname][i].name)
                     selItem = fItem;
             }
             csItem->setExpanded(true);
@@ -175,6 +193,11 @@ class ELSurfacePlotSettings : public QWidget
 
         if (selItem)
             selItem->setSelected(true);
+        else
+        {
+            cerr << "PLOT IS IN ERROR!\n";
+            // ERROR
+        }
 
         varChooser->blockSignals(false);
 
@@ -190,7 +213,6 @@ class ELSurfacePlotSettings : public QWidget
   public slots:
     void PipelineChanged(const QString &newpipe)
     {
-        cerr << "PipelineChanged\n";
         int index = pipelineCombo->currentIndex();
         if (index < 0)
             return;
@@ -236,6 +258,19 @@ class ELSurfacePlotSettings : public QWidget
             p.setPen(Qt::black);
         p.drawRect(0,0,15,15);
         colorBtn->setIcon(QPixmap::fromImage(img));
+    }
+    void StyleChanged(const QString &style)
+    {
+        if (!plot)
+            return;
+
+        // hack: delete the renderer so we can re-do it
+        delete plot->renderer;
+        plot->renderer = NULL;
+
+        plot->barsFor1D = (style == "Bars");
+
+        emit SomethingChanged();
     }
     void WireframeCheckChanged(int state)
     {

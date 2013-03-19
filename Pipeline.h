@@ -126,20 +126,41 @@ struct Pipeline
         {
             eavlField *f = ds->GetField(j);
             if (f->GetAssociation() == eavlField::ASSOC_POINTS)
-                dsinfo.nodalfields.push_back(f->GetArray()->GetName());
+            {
+                FieldInfo finfo;
+                finfo.name = f->GetArray()->GetName();
+                finfo.ncomp = f->GetArray()->GetNumberOfComponents();
+                finfo.minval = f->GetArray()->GetComponentWiseMin();
+                finfo.maxval = f->GetArray()->GetComponentWiseMax();
+                finfo.minmag = f->GetArray()->GetMagnitudeMin();
+                finfo.maxmag = f->GetArray()->GetMagnitudeMax();
+                dsinfo.nodalfields.push_back(finfo);
+            }
         }
 
 
         for (int i=0; i<ds->GetNumCellSets(); ++i)
         {
             eavlCellSet *cs = ds->GetCellSet(i);
-            dsinfo.cellsets.push_back(cs->GetName());
+            CellSetInfo csinfo;
+            csinfo.name = cs->GetName();
+            csinfo.topodim = cs->GetDimensionality();
+            dsinfo.cellsets.push_back(csinfo);
             for (int j=0; j<ds->GetNumFields(); ++j)
             {
                 eavlField *f = ds->GetField(j);
                 if (f->GetAssociation() == eavlField::ASSOC_CELL_SET &&
                     f->GetAssocCellSet() == i)
-                    dsinfo.cellsetfields[cs->GetName()].push_back(f->GetArray()->GetName());
+                {
+                    FieldInfo finfo;
+                    finfo.name = f->GetArray()->GetName();
+                    finfo.ncomp = f->GetArray()->GetNumberOfComponents();
+                    finfo.minval = f->GetArray()->GetComponentWiseMin();
+                    finfo.maxval = f->GetArray()->GetComponentWiseMax();
+                    finfo.minmag = f->GetArray()->GetMagnitudeMin();
+                    finfo.maxmag = f->GetArray()->GetMagnitudeMax();
+                    dsinfo.cellsetfields[cs->GetName()].push_back(finfo);
+                }
             }
         }
 

@@ -7,6 +7,7 @@
 #include <QTreeWidget>
 #include <QPushButton>
 #include <QGroupBox>
+#include <QBrush>
 
 #include "ELSurfacePlotSettings.h"
 
@@ -27,6 +28,7 @@ class ELPlotList : public QWidget
 {
     Q_OBJECT
   public: ///\todo: HACK, no public
+    bool oneDimensional;
     vector<Plot> plots;
   protected:
     Pipeline *latestUsedPipeline;
@@ -94,6 +96,7 @@ class ELPlotList : public QWidget
         topLayout->setRowStretch(trow, 100);
 
         // other initialization
+        oneDimensional = false;
         currentPlotIndex = -1;
         latestUsedPipeline = NULL;
     }
@@ -117,6 +120,22 @@ class ELPlotList : public QWidget
             Plot &p = plots[i];
             QTreeWidgetItem *item = new QTreeWidgetItem;
             SetItemTextFromPlot(item, p);
+            /*
+            QBrush brush;
+            if (p.valid)
+            {
+                item->setForeground(0,brush);
+                item->setForeground(1,brush);
+                item->setForeground(2,brush);
+            }
+            else
+            {
+                brush.setColor(Qt::red);
+                item->setForeground(0,brush);
+                item->setForeground(1,brush);
+                item->setForeground(2,brush);
+            }
+            */
             plotList->addTopLevelItem(item);
         }
     }
@@ -130,6 +149,7 @@ class ELPlotList : public QWidget
         if (plots.size() == 0)
         {
             Plot plot;
+            plot.oneDimensional = oneDimensional; ///<\todo:hac!
             plot.pipe = pipe;
             plots.push_back(plot);
         }
@@ -140,6 +160,7 @@ class ELPlotList : public QWidget
             if (p.pipe == pipe)
             {
                 p.UpdateDataSet(pipe->results.back());
+                p.CreateRenderer();
             }
         }
 
@@ -161,6 +182,7 @@ class ELPlotList : public QWidget
     void NewPlot()
     {
         Plot p;
+        p.oneDimensional = oneDimensional; ///<\todo:hac!
         p.pipe = latestUsedPipeline;
         plots.push_back(p);
         UpdatePlotList();
