@@ -48,6 +48,8 @@ class ELPipelineBuilder : public QWidget
     void sourceUpdated();
     void operatorUpdated(Attribute*);
     void deleteCurrentOp();
+    void NewPipeline();
+    void UpdatePipelineCombo();
 
   protected:
     ELSources *sourceSettings;

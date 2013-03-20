@@ -36,7 +36,6 @@ ELWindowFrame::ELWindowFrame(int i, ELWindowManager *parent)
     changeTypeList = new QComboBox(this);
     changeTypeList->addItem("(empty)");
     changeTypeList->addItem("Text Summary");
-    changeTypeList->addItem("Curve View");
     changeTypeList->addItem("1D View");
     changeTypeList->addItem("2D View");
     changeTypeList->addItem("3D View");

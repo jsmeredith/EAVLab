@@ -40,7 +40,6 @@ ELPipelineBuilder::ELPipelineBuilder(QWidget *parent)
     // Top layout
     QGridLayout *topLayout = new QGridLayout(this);
     pipelineChooser = new QComboBox(this);
-    pipelineChooser->addItem("");
     connect(pipelineChooser, SIGNAL(activated(int)), 
             this, SLOT(activatePipeline(int)));
     topLayout->addWidget(new QLabel("Pipeline: ", this), 0,0, 1,1);
@@ -48,6 +47,8 @@ ELPipelineBuilder::ELPipelineBuilder(QWidget *parent)
 
     QPushButton *newPipelineBtn = new QPushButton("New Pipeline", this);
     topLayout->addWidget(newPipelineBtn, 1,0, 1,2);
+    connect(newPipelineBtn, SIGNAL(clicked()),
+            this, SLOT(NewPipeline()));
 
     QSplitter *topSplitter = new QSplitter(Qt::Vertical, this);
     topLayout->addWidget(topSplitter, 3, 0, 1, 2);
@@ -129,8 +130,29 @@ ELPipelineBuilder::ELPipelineBuilder(QWidget *parent)
     // add one pipeline
     Pipeline::allPipelines.push_back(new Pipeline);
     activatePipeline(0);
+    pipelineChooser->addItem("");
 }
 
+
+void
+ELPipelineBuilder::NewPipeline()
+{
+    // add one pipeline
+    Pipeline::allPipelines.push_back(new Pipeline);
+    pipelineChooser->addItem("");
+    pipelineChooser->setCurrentIndex(Pipeline::allPipelines.size()-1);
+    UpdatePipelineCombo();
+    activatePipeline(Pipeline::allPipelines.size()-1);
+}
+
+void ELPipelineBuilder::UpdatePipelineCombo()
+{
+    for (int i=0; i<Pipeline::allPipelines.size(); i++)
+    {
+        Pipeline *p = Pipeline::allPipelines[i];
+        pipelineChooser->setItemText(i, p->GetName().c_str());
+    }
+}
 
 // ****************************************************************************
 // Method:  ELPipelineBuilder::rebuildPipelineDisplay
@@ -246,6 +268,7 @@ ELPipelineBuilder::newOperation()
 
     opSettingsWidget->hide();
 
+    UpdatePipelineCombo();
     rebuildPipelineDisplay();
     tree->setCurrentItem(tree->topLevelItem(tree->topLevelItemCount()-1));
 }
@@ -373,6 +396,8 @@ ELPipelineBuilder::executePipeline()
         return;
     }
 
+    UpdatePipelineCombo();
+
     emit pipelineUpdated(pipeline);
 }
 
@@ -490,4 +515,6 @@ ELPipelineBuilder::deleteCurrentOp()
         pipeline->ops.resize(pipeline->ops.size()-1);
         rebuildPipelineDisplay();
     }
+
+    UpdatePipelineCombo();
 }

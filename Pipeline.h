@@ -102,7 +102,14 @@ struct Pipeline
 
     string GetName()
     {
-        return "testname";
+        if (!source)
+            return "(empty)";
+        string result = source->GetSourceInfo();
+        if (result == "")
+            return "(empty)";
+        for (int i=0; i<ops.size(); i++)
+            result += string("+") + ops[i]->GetOperationShortName();
+        return result;
     }
 
     DSInfo GetVariables(int index)

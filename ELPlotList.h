@@ -114,11 +114,16 @@ class ELPlotList : public QWidget
     }
     void UpdatePlotList()
     {
-        plotList->clear();
+        //plotList->clear();
         for (int i=0; i<plots.size(); ++i)
         {
             Plot &p = plots[i];
-            QTreeWidgetItem *item = new QTreeWidgetItem;
+            QTreeWidgetItem *item = plotList->topLevelItem(i);
+            if (!item)
+            {
+                item = new QTreeWidgetItem;
+                plotList->addTopLevelItem(item);
+            }
             SetItemTextFromPlot(item, p);
             /*
             QBrush brush;
@@ -136,8 +141,9 @@ class ELPlotList : public QWidget
                 item->setForeground(2,brush);
             }
             */
-            plotList->addTopLevelItem(item);
         }
+        for (int i=plots.size(); i<plotList->topLevelItemCount(); ++i)
+            delete plotList->takeTopLevelItem(i);
     }
     void PipelineUpdated(Pipeline *pipe)
     {
@@ -182,10 +188,12 @@ class ELPlotList : public QWidget
     void NewPlot()
     {
         Plot p;
-        p.oneDimensional = oneDimensional; ///<\todo:hac!
+        p.oneDimensional = oneDimensional; ///<\todo:hack!
         p.pipe = latestUsedPipeline;
         plots.push_back(p);
         UpdatePlotList();
+        // select the new plot (and not any others)
+        plotList->setCurrentItem(plotList->topLevelItem(plotList->topLevelItemCount()-1));
         emit SomethingChanged();
     }
     void UpPlot()

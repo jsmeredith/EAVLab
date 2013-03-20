@@ -106,12 +106,16 @@ class ELSurfacePlotSettings : public QWidget
     {
         // rebuild the pipeline combo box
         // NOTE: this doesn't try to keep it the same!
-        int index = 0;
+        int index = -1;
         pipelineCombo->clear();
         for (int i=0; i<Pipeline::allPipelines.size(); i++)
         {
             pipelineCombo->addItem(Pipeline::allPipelines[i]->GetName().c_str());
+            if (plot && plot->pipe == Pipeline::allPipelines[i])
+                index = i;
         }
+        if (index >= 0)
+            pipelineCombo->setCurrentIndex(index);
 
         // NOTE: this is currently keyed on the ACTIVE pipeline,
         // not the one selected in the pipeline combo!  FIX THIS!
@@ -209,6 +213,14 @@ class ELSurfacePlotSettings : public QWidget
         wireframeChk->setChecked(plot->wireframe);
         SetColorTableCombo(plot->colortable);
         SetColorButtonColor(plot->color);
+        for (int i=0; i<Pipeline::allPipelines.size(); i++)
+        {
+            if (plot->pipe == Pipeline::allPipelines[i])
+            {
+                pipelineCombo->setCurrentIndex(i);
+                break;
+            }
+        }
     }
   public slots:
     void PipelineChanged(const QString &newpipe)

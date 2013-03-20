@@ -583,6 +583,7 @@ ELWindowManager::ChangeWindowType(int index, const QString &type)
     else if (type == "Text Summary")
     {
         windowframes[index]->SetWindow(new ELBasicInfoWindow(this));
+        settings[index] = NULL;
         emit WindowAdded(windowframes[index]->GetWindow());
     }
     else
