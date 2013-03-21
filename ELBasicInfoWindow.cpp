@@ -15,6 +15,8 @@
 ELBasicInfoWindow::ELBasicInfoWindow(ELWindowManager *parent)
     : QWidget(parent)
 {
+    settings = NULL;
+
     QGridLayout *topLayout = new QGridLayout(this);
     topLayout->setContentsMargins(0,0,0,0);
 
@@ -25,6 +27,8 @@ ELBasicInfoWindow::ELBasicInfoWindow(ELWindowManager *parent)
     // this doesn't work; events like mouse press aren't getting to the 
     // filter (and it's not just because of read-only!)
     topLayout->addWidget(info);
+
+    GetSettings();
 }
 
 
@@ -44,9 +48,10 @@ ELBasicInfoWindow::ELBasicInfoWindow(ELWindowManager *parent)
 // Modifications:
 // ****************************************************************************
 void
-ELBasicInfoWindow::PipelineUpdated(int, Pipeline *p)
+ELBasicInfoWindow::PipelineUpdated(Pipeline *p)
 {
-    FillFromPipeline(p);
+    settings->PipelineUpdated(p);
+    FillFromPipeline(settings->GetPipeline());
 }
 
 // ****************************************************************************
@@ -131,4 +136,22 @@ ELBasicInfoWindow::FillFromPipeline(Pipeline *p)
 void
 ELBasicInfoWindow::CurrentPipelineChanged(int)
 {
+}
+
+QWidget *
+ELBasicInfoWindow::GetSettings()
+{
+    if (!settings)
+    {
+        settings = new ELPipelineChooser;
+        connect(settings, SIGNAL(SomethingChanged()),
+                this, SLOT(SomethingChanged()));
+    }
+    return settings;
+}
+
+void
+ELBasicInfoWindow::SomethingChanged()
+{
+    FillFromPipeline(settings->GetPipeline());
 }

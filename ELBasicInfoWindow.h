@@ -8,6 +8,57 @@
 
 class Pipeline;
 
+class ELPipelineChooser : public QWidget
+{
+    Q_OBJECT
+  protected:
+    QComboBox *pipelineCombo;
+  public:
+    ELPipelineChooser() : QWidget(NULL)
+    {
+        QGridLayout *topLayout = new QGridLayout(this);
+        int srow = 0;
+        pipelineCombo = new QComboBox(this);
+        topLayout->addWidget(new QLabel("Pipeline Source:", this), srow,0, 1,2);
+        srow++;
+        topLayout->addWidget(pipelineCombo, srow,0, 1,2);
+        srow++;
+        connect(pipelineCombo, SIGNAL(activated(const QString&)),
+                this, SLOT(PipelineSelected(const QString&)));
+
+        topLayout->setRowStretch(srow, 100);
+
+    }
+    void PipelineUpdated(Pipeline *pipe)
+    {
+        // rebuild the pipeline combo box
+        while (Pipeline::allPipelines.size() < pipelineCombo->count())
+        {
+            pipelineCombo->removeItem(pipelineCombo->count()-1);
+        }
+        while (Pipeline::allPipelines.size() > pipelineCombo->count())
+        {
+            pipelineCombo->addItem("");
+        }
+        for (int i=0; i<Pipeline::allPipelines.size(); i++)
+        {
+            pipelineCombo->setItemText(i,
+                                Pipeline::allPipelines[i]->GetName().c_str());
+        }
+    }
+    Pipeline *GetPipeline()
+    {
+        return Pipeline::allPipelines[pipelineCombo->currentIndex()];
+    }
+  public slots:
+    void PipelineSelected(const QString &p)
+    {
+        emit SomethingChanged();
+    }
+  signals:
+    void SomethingChanged();
+};
+
 // ****************************************************************************
 // Class:  ELBasicInfoWindow
 //
@@ -24,13 +75,15 @@ class ELBasicInfoWindow : public QWidget
     Q_OBJECT
   protected:
     QTextEdit     *info;
-    std::vector<bool> watchedPipelines;
+    ELPipelineChooser *settings;
   public:
     ELBasicInfoWindow(ELWindowManager *parent);
     void FillFromPipeline(Pipeline *p);
+    QWidget *GetSettings();
   public slots:
-    void PipelineUpdated(int index, Pipeline *p);
     void CurrentPipelineChanged(int index);
+    void PipelineUpdated(Pipeline *p);
+    void SomethingChanged();
 };
 
 

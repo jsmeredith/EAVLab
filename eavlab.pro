@@ -17,6 +17,7 @@ SOURCES += main.cpp\
     EL1DWindow.cpp \
     EL2DWindow.cpp \
     EL3DWindow.cpp \
+    ELPolarWindow.cpp \
     ELBasicInfoWindow.cpp \
     ELPipelineBuilder.cpp \
     ELSources.cpp \

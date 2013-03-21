@@ -65,6 +65,7 @@ class ELSurfacePlotSettings : public QWidget
         topLayout->addWidget(new QLabel("Field:", this), srow,0, 1,2);
         srow++;
         topLayout->addWidget(varChooser, srow,0, 1,2);
+        topLayout->setRowStretch(srow, 100);
         srow++;
 
         ctCombo = new QComboBox(this);
@@ -105,7 +106,6 @@ class ELSurfacePlotSettings : public QWidget
     void PipelineUpdated(Pipeline *p)
     {
         // rebuild the pipeline combo box
-        // NOTE: this doesn't try to keep it the same!
         int index = -1;
         pipelineCombo->clear();
         for (int i=0; i<Pipeline::allPipelines.size(); i++)
@@ -117,8 +117,6 @@ class ELSurfacePlotSettings : public QWidget
         if (index >= 0)
             pipelineCombo->setCurrentIndex(index);
 
-        // NOTE: this is currently keyed on the ACTIVE pipeline,
-        // not the one selected in the pipeline combo!  FIX THIS!
         RebuildVarChooser();
 
         emit SomethingChanged();

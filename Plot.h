@@ -40,7 +40,7 @@ struct Plot
         delete renderer;
         renderer = NULL;
     }
-    void CreateRenderer()
+    void CreateRenderer(void (*xform)(double,double,double,double&,double&,double&) = NULL)
     {
         if (renderer)
             return;
@@ -53,6 +53,7 @@ struct Plot
                 {
                     if (field != "")
                         renderer = new eavlBarRenderer(pipe->results.back(),
+                                                       xform,
                                                        color,
                                                        0.10,
                                                        cellset,
@@ -62,6 +63,7 @@ struct Plot
                 {
                     if (field != "")
                         renderer = new eavlCurveRenderer(pipe->results.back(),
+                                                         xform,
                                                          color,
                                                          cellset,
                                                          field);
@@ -72,6 +74,7 @@ struct Plot
                 if (field != "")
                 {
                     renderer = new eavlPseudocolorRenderer(pipe->results.back(), 
+                                                           xform,
                                                            colortable,
                                                            wireframe,
                                                            cellset,
@@ -81,6 +84,7 @@ struct Plot
                 else
                 {
                     renderer = new eavlSingleColorRenderer(pipe->results.back(), 
+                                                           xform,
                                                            color,
                                                            wireframe,
                                                            cellset);

@@ -39,6 +39,7 @@ ELWindowFrame::ELWindowFrame(int i, ELWindowManager *parent)
     changeTypeList->addItem("1D View");
     changeTypeList->addItem("2D View");
     changeTypeList->addItem("3D View");
+    changeTypeList->addItem("Polar View");
     connect(changeTypeList, SIGNAL(currentIndexChanged(const QString &)),
             this, SLOT(WindowTypeChanged(const QString &)));
     topLayout->addWidget(changeTypeList, 0,1);
@@ -249,10 +250,10 @@ ELWindowFrame::WindowTypeChanged(const QString &type)
     changeTypeList->blockSignals(true);
     changeTypeList->clear();
     changeTypeList->addItem("Text Summary");
-    changeTypeList->addItem("Curve View");
     changeTypeList->addItem("1D View");
     changeTypeList->addItem("2D View");
     changeTypeList->addItem("3D View");
+    changeTypeList->addItem("Polar View");
     for (int i=0; i<changeTypeList->count(); ++i)
     {
         if (changeTypeList->itemText(i) == type)

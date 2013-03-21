@@ -15,6 +15,7 @@
 #include "EL3DWindow.h"
 #include "EL2DWindow.h"
 #include "EL1DWindow.h"
+#include "ELPolarWindow.h"
 #include "ELEmptyWindow.h"
 
 struct Arrangement
@@ -580,10 +581,19 @@ ELWindowManager::ChangeWindowType(int index, const QString &type)
         windowframes[index]->SetWindow(newwin);
         emit WindowAdded(windowframes[index]->GetWindow());
     }
+    else if (type == "Polar View")
+    {
+        ELPolarWindow *newwin = new ELPolarWindow(this);
+        QWidget *newwinsettings = newwin->GetSettings();
+        settings[index] = newwinsettings;
+        windowframes[index]->SetWindow(newwin);
+        emit WindowAdded(windowframes[index]->GetWindow());
+    }
     else if (type == "Text Summary")
     {
-        windowframes[index]->SetWindow(new ELBasicInfoWindow(this));
-        settings[index] = NULL;
+        ELBasicInfoWindow *newwin = new ELBasicInfoWindow(this);
+        settings[index] = newwin->GetSettings();
+        windowframes[index]->SetWindow(newwin);
         emit WindowAdded(windowframes[index]->GetWindow());
     }
     else

@@ -85,6 +85,7 @@ class ELPlotList : public QWidget
         settingsGroup = new QGroupBox("Settings", this);
         QGridLayout *settingsLayout = new QGridLayout(settingsGroup);
         topLayout->addWidget(settingsGroup, trow, 0, 1, 4);
+        topLayout->setRowStretch(trow, 100);
         trow++;
 
         plotSettings = new ELSurfacePlotSettings(settingsGroup);
@@ -92,8 +93,6 @@ class ELPlotList : public QWidget
                 this, SLOT(PlotChanged()));
         settingsLayout->addWidget(plotSettings);
         plotSettings->setEnabled(false);
-
-        topLayout->setRowStretch(trow, 100);
 
         // other initialization
         oneDimensional = false;
@@ -166,7 +165,6 @@ class ELPlotList : public QWidget
             if (p.pipe == pipe)
             {
                 p.UpdateDataSet(pipe->results.back());
-                p.CreateRenderer();
             }
         }
 
