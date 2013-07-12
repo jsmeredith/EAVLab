@@ -17,7 +17,7 @@ class eavlFilter;
 
 class ELPipelineBuilder;
 class ELWindowManager;
-class Pipeline;
+struct Pipeline;
 
 class QSplitter;
 
