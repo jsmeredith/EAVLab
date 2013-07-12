@@ -309,7 +309,7 @@ bool XMLParser::ParseXMLNestingAfterOpenBracket()
         // Can only get here once we get to a open-bracket and slash, so
         // it had better be the matching close tag
         Expect(TokLiteral);
-        if (acceptedText != elementName and
+        if (acceptedText != elementName &&
             ErrorOnMismatchedTags)
         {
             throw Exception("Mismatched open/close tags at line %d: "
