@@ -4,6 +4,12 @@
 #include <cassert>
 #include <cstring>
 
+#ifdef _WIN32
+ #define strtoll     _strtoi64
+ #define strtoull    _strtoui64
+ #define strtof      strtod 
+#endif
+
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // BasicTypes.cpp
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
