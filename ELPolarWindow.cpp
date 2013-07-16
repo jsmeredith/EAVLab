@@ -79,7 +79,7 @@ ELPolarWindow::PipelineUpdated(Pipeline *pipe)
 // Modifications:
 // ****************************************************************************
 void
-ELPolarWindow::CurrentPipelineChanged(int index)
+ELPolarWindow::CurrentPipelineChanged(int)
 {
     /*
     currentPipeline = index;

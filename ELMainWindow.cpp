@@ -77,7 +77,7 @@ ELMainWindow::ELMainWindow(QWidget *parent) :
     setCentralWidget(topSplitter);
 
     // I guess we want to start with a 3D window
-    windowMgr->ChangeWindowType(0, "Polar View");
+    windowMgr->ChangeWindowType(0, "3D View");
 }
 
 // ****************************************************************************

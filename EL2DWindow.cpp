@@ -79,7 +79,7 @@ EL2DWindow::PipelineUpdated(Pipeline *pipe)
 // Modifications:
 // ****************************************************************************
 void
-EL2DWindow::CurrentPipelineChanged(int index)
+EL2DWindow::CurrentPipelineChanged(int)
 {
     /*
     currentPipeline = index;

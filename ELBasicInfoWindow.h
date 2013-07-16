@@ -29,18 +29,18 @@ class ELPipelineChooser : public QWidget
         topLayout->setRowStretch(srow, 100);
 
     }
-    void PipelineUpdated(Pipeline *pipe)
+    void PipelineUpdated(Pipeline */*pipe*/)
     {
         // rebuild the pipeline combo box
-        while (Pipeline::allPipelines.size() < pipelineCombo->count())
+        while ((int)Pipeline::allPipelines.size() < pipelineCombo->count())
         {
             pipelineCombo->removeItem(pipelineCombo->count()-1);
         }
-        while (Pipeline::allPipelines.size() > pipelineCombo->count())
+        while ((int)Pipeline::allPipelines.size() > pipelineCombo->count())
         {
             pipelineCombo->addItem("");
         }
-        for (int i=0; i<Pipeline::allPipelines.size(); i++)
+        for (unsigned int i=0; i<Pipeline::allPipelines.size(); i++)
         {
             pipelineCombo->setItemText(i,
                                 Pipeline::allPipelines[i]->GetName().c_str());
@@ -51,7 +51,7 @@ class ELPipelineChooser : public QWidget
         return Pipeline::allPipelines[pipelineCombo->currentIndex()];
     }
   public slots:
-    void PipelineSelected(const QString &p)
+    void PipelineSelected(const QString &)
     {
         emit SomethingChanged();
     }

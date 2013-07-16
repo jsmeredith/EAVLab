@@ -103,12 +103,12 @@ class ELSurfacePlotSettings : public QWidget
         connect(styleCombo, SIGNAL(activated(const QString&)),
                 this, SLOT(StyleChanged(const QString&)));
     }
-    void PipelineUpdated(Pipeline *p)
+    void PipelineUpdated(Pipeline *)
     {
         // rebuild the pipeline combo box
         int index = -1;
         pipelineCombo->clear();
-        for (int i=0; i<Pipeline::allPipelines.size(); i++)
+        for (unsigned int i=0; i<Pipeline::allPipelines.size(); i++)
         {
             pipelineCombo->addItem(Pipeline::allPipelines[i]->GetName().c_str());
             if (plot && plot->pipe == Pipeline::allPipelines[i])
@@ -146,7 +146,7 @@ class ELSurfacePlotSettings : public QWidget
         fieldList.push_back(vector<string>());
         if (plot->cellset == "" && plot->field == "")
             selItem = ptsItem;
-        for (int i=0; i<dsinfo.nodalfields.size(); ++i)
+        for (unsigned int i=0; i<dsinfo.nodalfields.size(); ++i)
         {
             QTreeWidgetItem *fItem = new QTreeWidgetItem(QStringList()
                                                          <<dsinfo.nodalfields[i].name.c_str()
@@ -159,7 +159,7 @@ class ELSurfacePlotSettings : public QWidget
         ptsItem->setExpanded(true);
 
 
-        for (int k=0; k<dsinfo.cellsets.size(); ++k)
+        for (unsigned int k=0; k<dsinfo.cellsets.size(); ++k)
         {
             string csname = dsinfo.cellsets[k].name;
             QTreeWidgetItem *csItem = new QTreeWidgetItem(QStringList()
@@ -170,7 +170,7 @@ class ELSurfacePlotSettings : public QWidget
             fieldList.push_back(vector<string>());
             if (plot->cellset == csname && plot->field == "")
                 selItem = csItem;
-            for (int i=0; i<dsinfo.nodalfields.size(); ++i)
+            for (unsigned int i=0; i<dsinfo.nodalfields.size(); ++i)
             {
                 QTreeWidgetItem *fItem = new QTreeWidgetItem(QStringList()
                                                              <<dsinfo.nodalfields[i].name.c_str()
@@ -180,7 +180,7 @@ class ELSurfacePlotSettings : public QWidget
                 if (plot->cellset == csname && plot->field == dsinfo.nodalfields[i].name)
                     selItem = fItem;
             }
-            for (int i=0; i<dsinfo.cellsetfields[csname].size(); ++i)
+            for (unsigned int i=0; i<dsinfo.cellsetfields[csname].size(); ++i)
             {
                 QTreeWidgetItem *fItem = new QTreeWidgetItem(QStringList()
                                                              <<dsinfo.cellsetfields[csname][i].name.c_str()
@@ -211,7 +211,7 @@ class ELSurfacePlotSettings : public QWidget
         wireframeChk->setChecked(plot->wireframe);
         SetColorTableCombo(plot->colortable);
         SetColorButtonColor(plot->color);
-        for (int i=0; i<Pipeline::allPipelines.size(); i++)
+        for (unsigned int i=0; i<Pipeline::allPipelines.size(); i++)
         {
             if (plot->pipe == Pipeline::allPipelines[i])
             {
@@ -221,14 +221,14 @@ class ELSurfacePlotSettings : public QWidget
         }
     }
   public slots:
-    void PipelineChanged(const QString &newpipe)
+    void PipelineChanged(const QString &)
     {
         int index = pipelineCombo->currentIndex();
         if (index < 0)
             return;
         if (!plot)
             return;
-        if (index >= Pipeline::allPipelines.size())
+        if (index >= (int)Pipeline::allPipelines.size())
             return;
 
         plot->pipe = Pipeline::allPipelines[index];

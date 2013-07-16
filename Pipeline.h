@@ -107,12 +107,12 @@ struct Pipeline
         string result = source->GetSourceInfo();
         if (result == "")
             return "(empty)";
-        for (int i=0; i<ops.size(); i++)
+        for (unsigned int i=0; i<ops.size(); i++)
             result += string("+") + ops[i]->GetOperationShortName();
         return result;
     }
 
-    DSInfo GetVariables(int index)
+    DSInfo GetVariables(int /*index*/)
     {
         DSInfo dsinfo;
         try
@@ -195,7 +195,7 @@ struct Pipeline
 #if 0
             // find the variables needed for each operation
             std::vector<std::string> vars;
-            for (int i=ops.size()-1; i>=0; --i)
+            for (unsigned int i=ops.size()-1; i>=0; --i)
             {
                 std::vector<std::string> newvars;
                 newvars = ops[i]->GetNeededVariables();

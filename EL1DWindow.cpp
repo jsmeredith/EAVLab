@@ -81,7 +81,7 @@ EL1DWindow::PipelineUpdated(Pipeline *pipe)
 // Modifications:
 // ****************************************************************************
 void
-EL1DWindow::CurrentPipelineChanged(int index)
+EL1DWindow::CurrentPipelineChanged(int)
 {
     /*
     currentPipeline = index;

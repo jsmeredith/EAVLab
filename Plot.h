@@ -35,7 +35,7 @@ struct Plot
         oneDimensional = false;
         barsFor1D = false;
     }
-    void UpdateDataSet(eavlDataSet *ds)
+    void UpdateDataSet(eavlDataSet *)
     {
         delete renderer;
         renderer = NULL;

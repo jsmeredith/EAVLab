@@ -80,7 +80,7 @@ EL3DWindow::PipelineUpdated(Pipeline *pipe)
 // Modifications:
 // ****************************************************************************
 void
-EL3DWindow::CurrentPipelineChanged(int index)
+EL3DWindow::CurrentPipelineChanged(int)
 {
     /*
     //cerr << "EL3DWindow::CurrentPipelineChanged\n";
