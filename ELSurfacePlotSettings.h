@@ -69,13 +69,17 @@ class ELSurfacePlotSettings : public QWidget
         srow++;
 
         ctCombo = new QComboBox(this);
-        ctCombo->addItem("default");
         ctCombo->addItem("dense");
         ctCombo->addItem("sharp");
         ctCombo->addItem("thermal");
         ctCombo->addItem("blue");
         ctCombo->addItem("orange");
         ctCombo->addItem("levels");
+        ctCombo->addItem("IsoL");
+        ctCombo->addItem("LinearL");
+        ctCombo->addItem("LinLhot");
+        ctCombo->addItem("CubicL");
+        ctCombo->addItem("CubicYF");
         topLayout->addWidget(new QLabel("Color Table:", this), srow,0);
         topLayout->addWidget(ctCombo, srow,1);
         srow++;
