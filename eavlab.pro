@@ -25,8 +25,8 @@ SOURCES += main.cpp\
     Pipeline.cpp \
     XMLTools.cpp
 
-EAVLROOT = /home/js9/eavl/2013-07-11_work/EAVL
-#EAVLROOT = $$(EAVL)
+#EAVLROOT = /home/js9/eavl/2013-07-11_work/EAVL
+EAVLROOT = $$(EAVL)
 isEmpty(EAVLROOT) {
   warning("Expected an EAVL environment varible to be set that points")
   warning("to a configured/built EAVL checkout.  One does not exist.")

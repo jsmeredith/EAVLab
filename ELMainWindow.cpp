@@ -123,7 +123,7 @@ void ELMainWindow::Exit()
 void
 ELMainWindow::OpenFile()
 {
-    QString extensions = "*.vtk *.bov *.pdb *.png";
+    QString extensions = "*.vtk *.bov *.pdb *.png *.dump";
 #ifdef HAVE_SILO
     extensions += " *.silo";
     extensions += " *.chi";
