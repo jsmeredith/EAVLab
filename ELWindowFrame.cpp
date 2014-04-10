@@ -37,6 +37,7 @@ ELWindowFrame::ELWindowFrame(int i, ELWindowManager *parent)
     changeTypeList->addItem("(empty)");
     changeTypeList->addItem("Text Summary");
     changeTypeList->addItem("1D View");
+    changeTypeList->addItem("1D Log View");
     changeTypeList->addItem("2D View");
     changeTypeList->addItem("3D View");
     changeTypeList->addItem("Polar View");
@@ -251,6 +252,7 @@ ELWindowFrame::WindowTypeChanged(const QString &type)
     changeTypeList->clear();
     changeTypeList->addItem("Text Summary");
     changeTypeList->addItem("1D View");
+    changeTypeList->addItem("1D Log View");
     changeTypeList->addItem("2D View");
     changeTypeList->addItem("3D View");
     changeTypeList->addItem("Polar View");

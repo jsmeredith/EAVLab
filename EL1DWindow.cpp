@@ -23,7 +23,7 @@
 //
 // Modifications:
 // ****************************************************************************
-EL1DWindow::EL1DWindow(ELWindowManager *parent)
+EL1DWindow::EL1DWindow(ELWindowManager *parent, bool logarithmic)
     : QGLWidget(parent)
 {
     settings = NULL;
@@ -37,6 +37,9 @@ EL1DWindow::EL1DWindow(ELWindowManager *parent)
 
     scene = new eavl1DGLScene();
     window = new eavl1DWindow(eavlColor::white, NULL, scene);
+
+    if (logarithmic)
+        window->view.view2d.logy = true;
 
     // force creation
     GetSettings();
