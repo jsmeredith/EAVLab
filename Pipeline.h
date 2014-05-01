@@ -157,7 +157,7 @@ struct Pipeline
             {
                 eavlField *f = ds->GetField(j);
                 if (f->GetAssociation() == eavlField::ASSOC_CELL_SET &&
-                    f->GetAssocCellSet() == i)
+                    f->GetAssocCellSet() == cs->GetName())
                 {
                     FieldInfo finfo;
                     finfo.name = f->GetArray()->GetName();
