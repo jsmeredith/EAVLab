@@ -37,6 +37,7 @@ class ELWindowFrame : public QWidget
     QGridLayout *topLayout;
     QPushButton *activateButton;
     QComboBox *changeTypeList;
+    QComboBox *rendererList;
   public:
     ELWindowFrame(int index, ELWindowManager *parent);
     void SetActive(bool);
@@ -47,6 +48,7 @@ class ELWindowFrame : public QWidget
   public slots:
     void activeToggled(bool);
     void WindowTypeChanged(const QString &);
+    void RendererChanged(const QString &);
   signals:
     void ChangeWindowType(int i, const QString &);
 };

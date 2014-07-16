@@ -45,6 +45,14 @@ ELWindowFrame::ELWindowFrame(int i, ELWindowManager *parent)
             this, SLOT(WindowTypeChanged(const QString &)));
     topLayout->addWidget(changeTypeList, 0,1);
 
+    rendererList = new QComboBox(this);
+    rendererList->addItem("OpenGL");
+    rendererList->addItem("OpenGL (simple)");
+    rendererList->addItem("RayTrace");
+    connect(rendererList, SIGNAL(currentIndexChanged(const QString &)),
+            this, SLOT(RendererChanged(const QString &)));
+    topLayout->addWidget(rendererList, 0,2);
+
 
     SetActive(false);
 }
@@ -265,5 +273,18 @@ ELWindowFrame::WindowTypeChanged(const QString &type)
         }
     }
     changeTypeList->blockSignals(false);
+}
+
+
+#include "EL3DWindow.h"
+void
+ELWindowFrame::RendererChanged(const QString &type)
+{
+    ///\HACK!
+    if (dynamic_cast<EL3DWindow*>(win))
+    {
+        dynamic_cast<EL3DWindow*>(win)->SetRendererType(type);
+        //win->SetRendererType(type);
+    }
 }
 

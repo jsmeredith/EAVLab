@@ -279,8 +279,8 @@ class ELSurfacePlotSettings : public QWidget
             return;
 
         // hack: delete the renderer so we can re-do it
-        delete plot->renderer;
-        plot->renderer = NULL;
+        delete plot->eavlplot;
+        plot->eavlplot = NULL;
 
         plot->barsFor1D = (style == "Bars");
 
@@ -292,8 +292,8 @@ class ELSurfacePlotSettings : public QWidget
             return;
 
         // hack: delete the renderer so we can re-do it
-        delete plot->renderer;
-        plot->renderer = NULL;
+        delete plot->eavlplot;
+        plot->eavlplot = NULL;
 
         plot->wireframe = state;
 
@@ -317,8 +317,8 @@ class ELSurfacePlotSettings : public QWidget
         // in the process re-create the renderer with the
         // old color.  oops!  so wait to delete the renderer
         // until you have the right new color to use.)
-        delete plot->renderer;
-        plot->renderer = NULL;
+        delete plot->eavlplot;
+        plot->eavlplot = NULL;
 
         plot->color = eavlColor(color.redF(),
                                 color.greenF(),
@@ -334,8 +334,8 @@ class ELSurfacePlotSettings : public QWidget
             return;
         ///\todo: we're on track to have a bunch of this junk
         /// any time we change stuff; fix it:
-        delete plot->renderer;
-        plot->renderer = NULL;
+        delete plot->eavlplot;
+        plot->eavlplot = NULL;
 
         plot->colortable = ct.toStdString();
         emit SomethingChanged();
@@ -346,8 +346,8 @@ class ELSurfacePlotSettings : public QWidget
             return;
 
         // here, we set the field index and cell index given a field name
-        delete plot->renderer;
-        plot->renderer = NULL;
+        delete plot->eavlplot;
+        plot->eavlplot = NULL;
 
         string oldCS = plot->cellset;
         string oldF = plot->field;

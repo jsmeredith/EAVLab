@@ -7,11 +7,14 @@
 #include <QActionGroup>
 
 #include <eavlColorTable.h>
-#include <eavlRenderer.h>
+#include <eavlPlot.h>
 #include <eavl3DWindow.h>
 #include <eavlScene.h>
 #include <eavlTexture.h>
 #include <eavlTextAnnotation.h>
+#include <eavlSceneRendererSimpleGL.h>
+#include <eavlSceneRendererGL.h>
+#include <eavlSceneRendererSimpleRT.h>
 
 #include <cfloat>
 
@@ -26,6 +29,8 @@
 EL3DWindow::EL3DWindow(ELWindowManager *parent)
     : QGLWidget(parent)
 {
+    setFormat(QGLFormat(QGL::SampleBuffers));
+
     settings = NULL;
 
     mousedown = false;
@@ -35,7 +40,8 @@ EL3DWindow::EL3DWindow(ELWindowManager *parent)
     showmesh = false;
 
     scene = new eavl3DGLScene();
-    window = new eavl3DWindow(eavlColor(0.15, 0.0, 0.25), NULL, scene);
+    window = new eavl3DWindow(eavlColor(0.15, 0.0, 0.25), NULL, scene,
+                              new eavlSceneRendererGL);
 
     // force creation
     GetSettings();
@@ -122,11 +128,11 @@ EL3DWindow::UpdatePlots()
         Plot &p = settings->plots[i];
         if (!p.pipe || p.pipe->results.size() == 0)
             continue;
-        p.CreateRenderer();
-        if (!p.renderer)
+        p.CreateEAVLPlot();
+        if (!p.eavlplot)
             continue;
         shoulddraw = true;
-        scene->plots.push_back(p.renderer);
+        scene->plots.push_back(p.eavlplot);
     }
     return shoulddraw;
 }
@@ -195,8 +201,10 @@ EL3DWindow::paintGL()
     window->Paint();
 
 
-#if 0
+#if 1
     // various tests of font rendering
+    glEnable(GL_DEPTH_TEST);
+    glDisable(GL_LIGHTING);
     static eavlTextAnnotation *t1=NULL,*t1b=NULL,*t1c=NULL, *t2=NULL,*t3=NULL,*t3b=NULL, *t4=NULL,*t4b=NULL;
     if (!t1)
     {
@@ -213,7 +221,7 @@ EL3DWindow::paintGL()
                                          eavlColor::white,
                                          1.0,
                                          -5,0,0,
-                                         1,0,-1,
+                                         -1,0,1,
                                          0,1,0);
         t3 = new eavlBillboardTextAnnotation(window,"Test 3D billboard text, height=0.05 in screen space at (0,5,0)",
                                     eavlColor::white,
@@ -235,14 +243,14 @@ EL3DWindow::paintGL()
     }
 
 
-    t1->Render(view);
-    t1b->Render(view);
-    t1c->Render(view);
-    t2->Render(view);
-    t3->Render(view);
-    t3b->Render(view);
-    t4->Render(view);
-    t4b->Render(view);
+    t1->Render(window->view);
+    t1b->Render(window->view);
+    t1c->Render(window->view);
+    t2->Render(window->view);
+    t3->Render(window->view);
+    t3b->Render(window->view);
+    t4->Render(window->view);
+    t4b->Render(window->view);
 #endif
 
 }
@@ -422,5 +430,20 @@ EL3DWindow::GetSettings()
 void
 EL3DWindow::SomethingChanged()
 {
+    updateGL();
+}
+
+
+void
+EL3DWindow::SetRendererType(const QString &type)
+{
+    if (type == "OpenGL")
+        window->SetSceneRenderer(new eavlSceneRendererGL);
+    if (type == "OpenGL (simple)")
+        window->SetSceneRenderer(new eavlSceneRendererSimpleGL);
+    else if (type == "RayTrace")
+        window->SetSceneRenderer(new eavlSceneRendererSimpleRT);
+    else
+        ;
     updateGL();
 }

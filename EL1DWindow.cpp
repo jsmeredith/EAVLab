@@ -7,11 +7,13 @@
 #include <QActionGroup>
 
 #include <eavlColorTable.h>
-#include <eavlRenderer.h>
+#include <eavlPlot.h>
 #include <eavl1DWindow.h>
 #include <eavlScene.h>
 #include <eavlTexture.h>
 #include <eavlTextAnnotation.h>
+#include <eavlSceneRendererGL.h>
+#include <eavlSceneRendererSimpleGL.h>
 
 #include <cfloat>
 
@@ -36,7 +38,8 @@ EL1DWindow::EL1DWindow(ELWindowManager *parent, bool logarithmic)
     barstyle = false;
 
     scene = new eavl1DGLScene();
-    window = new eavl1DWindow(eavlColor::white, NULL, scene);
+    window = new eavl1DWindow(eavlColor::white, NULL, scene,
+                              new eavlSceneRendererGL);
 
     if (logarithmic)
         window->view.view2d.logy = true;
@@ -126,11 +129,11 @@ EL1DWindow::UpdatePlots()
         Plot &p = settings->plots[i];
         if (!p.pipe || p.pipe->results.size() == 0)
             continue;
-        p.CreateRenderer();
-        if (!p.renderer)
+        p.CreateEAVLPlot();
+        if (!p.eavlplot)
             continue;
         shoulddraw = true;
-        scene->plots.push_back(p.renderer);
+        scene->plots.push_back(p.eavlplot);
     }
     return shoulddraw;
 }

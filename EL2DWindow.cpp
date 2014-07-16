@@ -7,10 +7,11 @@
 #include <QActionGroup>
 
 #include <eavlColorTable.h>
-#include <eavlRenderer.h>
+#include <eavlPlot.h>
 #include <eavl2DWindow.h>
 #include <eavlScene.h>
 #include <eavlTexture.h>
+#include <eavlSceneRendererGL.h>
 
 #include <cfloat>
 
@@ -34,7 +35,8 @@ EL2DWindow::EL2DWindow(ELWindowManager *parent)
     showmesh = false;
 
     scene = new eavl2DGLScene();
-    window = new eavl2DWindow(eavlColor(0.0, 0.12, 0.25), NULL, scene);
+    window = new eavl2DWindow(eavlColor(0.0, 0.12, 0.25), NULL, scene,
+                              new eavlSceneRendererGL);
 
     // force creation
     GetSettings();
@@ -121,11 +123,11 @@ EL2DWindow::UpdatePlots()
         Plot &p = settings->plots[i];
         if (!p.pipe || p.pipe->results.size() == 0)
             continue;
-        p.CreateRenderer();
-        if (!p.renderer)
+        p.CreateEAVLPlot();
+        if (!p.eavlplot)
             continue;
         shoulddraw = true;
-        scene->plots.push_back(p.renderer);
+        scene->plots.push_back(p.eavlplot);
     }
     return shoulddraw;
 }

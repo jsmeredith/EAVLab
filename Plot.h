@@ -4,7 +4,7 @@
 
 #include "eavl.h"
 #include "eavlView.h"
-#include "eavlRenderer.h"
+#include "eavlPlot.h"
 #include "eavlColorTable.h"
 
 struct Plot
@@ -15,11 +15,11 @@ struct Plot
     string field;
     eavlColor color;
     bool wireframe;
-    eavlRenderer *renderer;
+    eavlPlot *eavlplot;
     bool valid;
 
     // these two are hacks; need a better way to get this info
-    // to create the right renderers for plots....
+    // to create the right type of plots....
     bool oneDimensional;
     bool barsFor1D;
 
@@ -29,7 +29,7 @@ struct Plot
              field(""),
              color(eavlColor::grey50),
              wireframe(false),
-             renderer(NULL),
+             eavlplot(NULL),
              valid(true)
     {
         oneDimensional = false;
@@ -37,64 +37,41 @@ struct Plot
     }
     void UpdateDataSet(eavlDataSet *)
     {
-        delete renderer;
-        renderer = NULL;
+        delete eavlplot;
+        eavlplot = NULL;
     }
-    void CreateRenderer(void (*xform)(double,double,double,double&,double&,double&) = NULL)
+    void CreateEAVLPlot(void (*xform)(double,double,double,double&,double&,double&) = NULL)
     {
-        if (renderer)
+        if (eavlplot)
             return;
 
         try
         {
+            // can't set transform field without a field
             if (oneDimensional)
             {
-                if (barsFor1D)
-                {
-                    if (field != "")
-                        renderer = new eavlBarRenderer(pipe->results.back(),
-                                                       xform,
-                                                       color,
-                                                       0.10,
-                                                       cellset,
-                                                       field);
-                }
-                else
-                {
-                    if (field != "")
-                        renderer = new eavlCurveRenderer(pipe->results.back(),
-                                                         xform,
-                                                         color,
-                                                         cellset,
-                                                         field);
-                }
+                eavlplot = new eavl1DPlot(pipe->results.back(), cellset);
+                dynamic_cast<eavl1DPlot*>(eavlplot)->SetBarStyle(barsFor1D);
             }
             else
             {
-                if (field != "")
-                {
-                    renderer = new eavlPseudocolorRenderer(pipe->results.back(), 
-                                                           xform,
-                                                           colortable,
-                                                           wireframe,
-                                                           cellset,
-                                                           field);
-                    return;
-                }
-                else
-                {
-                    renderer = new eavlSingleColorRenderer(pipe->results.back(), 
-                                                           xform,
-                                                           color,
-                                                           wireframe,
-                                                           cellset);
-                }
+                eavlplot = new eavlPlot(pipe->results.back(), cellset);
             }
+
+            if (xform)
+                eavlplot->SetTransformFunction(xform);
+
+            eavlplot->SetField(field);
+            eavlplot->SetSingleColor(color);
+            eavlplot->SetWireframe(wireframe);
+            eavlplot->SetColorTableName(colortable);
+
+
             valid = true;
         }
         catch (...)
         {
-            renderer = NULL;
+            eavlplot = NULL;
             valid = false;
         }
     }
