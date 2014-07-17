@@ -201,7 +201,7 @@ EL3DWindow::paintGL()
     window->Paint();
 
 
-#if 1
+#if 0
     // various tests of font rendering
     glEnable(GL_DEPTH_TEST);
     glDisable(GL_LIGHTING);
