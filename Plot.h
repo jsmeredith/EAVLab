@@ -15,6 +15,7 @@ struct Plot
     string field;
     eavlColor color;
     bool wireframe;
+    void (*xform)(double,double,double,double&,double&,double&);
     eavlPlot *eavlplot;
     bool valid;
 
@@ -29,6 +30,7 @@ struct Plot
              field(""),
              color(eavlColor::grey50),
              wireframe(false),
+             xform(NULL),
              eavlplot(NULL),
              valid(true)
     {
@@ -40,23 +42,25 @@ struct Plot
         delete eavlplot;
         eavlplot = NULL;
     }
-    void CreateEAVLPlot(void (*xform)(double,double,double,double&,double&,double&) = NULL)
+    void CreateEAVLPlot()
     {
-        if (eavlplot)
-            return;
-
         try
         {
-            // can't set transform field without a field
-            if (oneDimensional)
+            // Create the EAVL Plot if needed
+            if (!eavlplot)
             {
-                eavlplot = new eavl1DPlot(pipe->results.back(), cellset);
-                dynamic_cast<eavl1DPlot*>(eavlplot)->SetBarStyle(barsFor1D);
+                if (oneDimensional)
+                {
+                    eavlplot = new eavl1DPlot(pipe->results.back(), cellset);
+                    dynamic_cast<eavl1DPlot*>(eavlplot)->SetBarStyle(barsFor1D);
+                }
+                else
+                {
+                    eavlplot = new eavlPlot(pipe->results.back(), cellset);
+                }
             }
-            else
-            {
-                eavlplot = new eavlPlot(pipe->results.back(), cellset);
-            }
+
+            // update its values
 
             if (xform)
                 eavlplot->SetTransformFunction(xform);
@@ -65,7 +69,6 @@ struct Plot
             eavlplot->SetSingleColor(color);
             eavlplot->SetWireframe(wireframe);
             eavlplot->SetColorTableName(colortable);
-
 
             valid = true;
         }

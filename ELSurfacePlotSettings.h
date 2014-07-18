@@ -278,10 +278,6 @@ class ELSurfacePlotSettings : public QWidget
         if (!plot)
             return;
 
-        // hack: delete the renderer so we can re-do it
-        delete plot->eavlplot;
-        plot->eavlplot = NULL;
-
         plot->barsFor1D = (style == "Bars");
 
         emit SomethingChanged();
@@ -290,10 +286,6 @@ class ELSurfacePlotSettings : public QWidget
     {
         if (!plot)
             return;
-
-        // hack: delete the renderer so we can re-do it
-        delete plot->eavlplot;
-        plot->eavlplot = NULL;
 
         plot->wireframe = state;
 
@@ -310,16 +302,6 @@ class ELSurfacePlotSettings : public QWidget
                      c.GetComponentAsByte(2));
         color = QColorDialog::getColor(color, this);
 
-        // hack: delete the renderer so we can re-do it
-        // (note: if you do this too soon, i.e. before
-        // the color dialog comes up, then when the dialog
-        // comes up, it will re-draw the window, and
-        // in the process re-create the renderer with the
-        // old color.  oops!  so wait to delete the renderer
-        // until you have the right new color to use.)
-        delete plot->eavlplot;
-        plot->eavlplot = NULL;
-
         plot->color = eavlColor(color.redF(),
                                 color.greenF(),
                                 color.blueF());
@@ -332,10 +314,6 @@ class ELSurfacePlotSettings : public QWidget
     {
         if (!plot)
             return;
-        ///\todo: we're on track to have a bunch of this junk
-        /// any time we change stuff; fix it:
-        delete plot->eavlplot;
-        plot->eavlplot = NULL;
 
         plot->colortable = ct.toStdString();
         emit SomethingChanged();

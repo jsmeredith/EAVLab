@@ -131,7 +131,8 @@ ELPolarWindow::UpdatePlots()
         Plot &p = settings->plots[i];
         if (!p.pipe || p.pipe->results.size() == 0)
             continue;
-        p.CreateEAVLPlot(&TransformTo2DCart);
+        p.xform = &TransformTo2DCart;
+        p.CreateEAVLPlot();
         if (!p.eavlplot)
             continue;
         shoulddraw = true;
