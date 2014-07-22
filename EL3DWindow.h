@@ -48,6 +48,7 @@ class EL3DWindow : public QGLWidget
     virtual void  mouseReleaseEvent(QMouseEvent*);
 
     void SetRendererType(const QString&);
+    void SetRendererOptions(Attribute*);
 
     QWidget *GetSettings();
     /*

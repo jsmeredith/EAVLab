@@ -13,6 +13,8 @@
 
 class ELWindowManager;
 class ELWindow;
+class ELRenderOptions;
+class RenderingAttributes;
 
 // ****************************************************************************
 // Class:  ELWindowFrame
@@ -38,6 +40,9 @@ class ELWindowFrame : public QWidget
     QPushButton *activateButton;
     QComboBox *changeTypeList;
     QComboBox *rendererList;
+    QPushButton *renderoptionsButton;
+    ELRenderOptions *renderoptionsWindow;
+    RenderingAttributes *renderingAtts;
   public:
     ELWindowFrame(int index, ELWindowManager *parent);
     void SetActive(bool);
@@ -49,6 +54,8 @@ class ELWindowFrame : public QWidget
     void activeToggled(bool);
     void WindowTypeChanged(const QString &);
     void RendererChanged(const QString &);
+    void RenderOptionsPushed();
+    void RenderOptionsChanged(Attribute*);
   signals:
     void ChangeWindowType(int i, const QString &);
 };

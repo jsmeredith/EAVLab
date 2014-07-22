@@ -1,6 +1,8 @@
 // Copyright 2012-2013 UT-Battelle, LLC.  See LICENSE.txt for more information.
 #include "EL3DWindow.h"
 
+#include "ELRenderOptions.h"
+
 #include <QMouseEvent>
 #include <QToolBar>
 #include <QAction>
@@ -445,5 +447,19 @@ EL3DWindow::SetRendererType(const QString &type)
         window->SetSceneRenderer(new eavlSceneRendererSimpleRT);
     else
         ;
-    updateGL();
+}
+
+void
+EL3DWindow::SetRendererOptions(Attribute *atts)
+{
+    RenderingAttributes *r = dynamic_cast<RenderingAttributes*>(atts);
+    if (!r)
+        return;
+
+    eavlSceneRenderer *sr = window->GetSceneRenderer();
+    sr->SetAmbientCoefficient(r->Ka);
+    sr->SetDiffuseCoefficient(r->Kd);
+    sr->SetSpecularCoefficient(r->Ks);
+    sr->SetLightDirection(r->Lx, r->Ly, r->Lz);
+    sr->SetEyeLight(r->eyeLight);
 }

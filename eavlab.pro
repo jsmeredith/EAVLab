@@ -1,5 +1,5 @@
-CONFIG += debug
-#CONFIG += release
+#CONFIG += debug
+CONFIG += release
 
 QT       += core gui opengl
 
@@ -25,6 +25,7 @@ SOURCES += main.cpp\
     ELPolarWindow.cpp \
     ELBasicInfoWindow.cpp \
     ELPipelineBuilder.cpp \
+    ELRenderOptions.cpp \
     ELSources.cpp \
     Attribute.cpp \
     Pipeline.cpp \

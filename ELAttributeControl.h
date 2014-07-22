@@ -26,14 +26,16 @@
 class ELAttributeControl : public QWidget
 {
     Q_OBJECT
+  protected:
     Attribute *atts;
     vector<QLineEdit*> lineEdits;
     vector<QCheckBox*> checkBoxes;
     QPushButton *applyButton;
+    QGridLayout *layout;
     bool created;
   public:
-    ELAttributeControl(QWidget *parent);
-    void ConnectAttributes(Attribute *a);
+    ELAttributeControl(QWidget *parent, Qt::WindowFlags f = 0);
+    virtual void ConnectAttributes(Attribute *a);
   public slots:
     void UpdateWindowFromAtts();
     void UpdateAttsFromWindow();

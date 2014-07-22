@@ -324,8 +324,9 @@ class ELSurfacePlotSettings : public QWidget
             return;
 
         // here, we set the field index and cell index given a field name
-        delete plot->eavlplot;
-        plot->eavlplot = NULL;
+
+        // need to force an update when the sel
+        plot->UpdateDataSet(plot->pipe->results.back());
 
         string oldCS = plot->cellset;
         string oldF = plot->field;

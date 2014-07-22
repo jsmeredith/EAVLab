@@ -39,6 +39,7 @@ struct Plot
     }
     void UpdateDataSet(eavlDataSet *)
     {
+        //cerr << "update data set\n";
         delete eavlplot;
         eavlplot = NULL;
     }
@@ -47,6 +48,7 @@ struct Plot
         try
         {
             // Create the EAVL Plot if needed
+            //cerr << "ELPlot: creating? " << (eavlplot) << endl;
             if (!eavlplot)
             {
                 if (oneDimensional)
@@ -57,6 +59,7 @@ struct Plot
                 else
                 {
                     eavlplot = new eavlPlot(pipe->results.back(), cellset);
+                    //cerr << "new eavlplot = " << eavlplot << endl;
                 }
             }
 
