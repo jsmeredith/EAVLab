@@ -17,6 +17,7 @@
 #include <eavlSceneRendererSimpleGL.h>
 #include <eavlSceneRendererGL.h>
 #include <eavlSceneRendererSimpleRT.h>
+#include <eavlSceneRendererSimpleVR.h>
 
 #include <cfloat>
 
@@ -445,6 +446,8 @@ EL3DWindow::SetRendererType(const QString &type)
         window->SetSceneRenderer(new eavlSceneRendererSimpleGL);
     else if (type == "RayTrace")
         window->SetSceneRenderer(new eavlSceneRendererSimpleRT);
+    else if (type == "Volume")
+        window->SetSceneRenderer(new eavlSceneRendererSimpleVR);
     else
         ;
 }
