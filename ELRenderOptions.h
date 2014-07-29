@@ -10,8 +10,10 @@ class RenderingAttributes : public Attribute
     float Ka;
     float Kd;
     float Ks;
-    bool eyeLight;
+    bool  eyeLight;
     float Lx, Ly, Lz;
+    float pointRadius;
+    float Cx,Cy,Cz;
   public:
     virtual const char *GetType() {return "RenderingAttributes";}
     RenderingAttributes() : Attribute()
@@ -26,6 +28,8 @@ class RenderingAttributes : public Attribute
         Ly = 0.2;
         Lz = 1.0;
 
+        pointRadius = .1f;
+
     }
     virtual ~RenderingAttributes()
     {
@@ -39,6 +43,7 @@ class RenderingAttributes : public Attribute
         Add("Lx",Lx);
         Add("Ly",Ly);
         Add("Lz",Lz);
+        Add("pRadius", pointRadius);
     }
 };
 

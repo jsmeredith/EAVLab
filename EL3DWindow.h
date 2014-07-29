@@ -46,7 +46,6 @@ class EL3DWindow : public QGLWidget
     virtual void  mouseMoveEvent(QMouseEvent*);
     virtual void  mousePressEvent(QMouseEvent*);
     virtual void  mouseReleaseEvent(QMouseEvent*);
-
     void SetRendererType(const QString&);
     void SetRendererOptions(Attribute*);
 
