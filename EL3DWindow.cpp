@@ -7,6 +7,7 @@
 #include <QToolBar>
 #include <QAction>
 #include <QActionGroup>
+#include <QKeyEvent>
 
 #include <eavlColorTable.h>
 #include <eavlPlot.h>
@@ -350,7 +351,15 @@ EL3DWindow::mouseMoveEvent(QMouseEvent *mev)
         else if (mev->buttons() & Qt::MidButton)
         {
             double zoom = y2-y1;
-            window->view.Zoom3D(zoom);
+            
+            if (shiftKey)
+            {
+                window->view.MoveForward3d(zoom);
+            }
+            else 
+            {
+                window->view.Zoom3D(zoom);
+            }
         }
         // No: we want a popup menu instead!
         //else if (mev->buttons() & Qt::RightButton)
@@ -436,7 +445,6 @@ EL3DWindow::SomethingChanged()
     updateGL();
 }
 
-
 void
 EL3DWindow::SetRendererType(const QString &type)
 {
@@ -465,4 +473,5 @@ EL3DWindow::SetRendererOptions(Attribute *atts)
     sr->SetSpecularCoefficient(r->Ks);
     sr->SetLightDirection(r->Lx, r->Ly, r->Lz);
     sr->SetEyeLight(r->eyeLight);
+    //sr->SetPointRadius(r->pointRadius);
 }
