@@ -97,6 +97,7 @@ set(EAVLAB_QT_HDR
   ELWindowManager.h
   ELSurfacePlotSettings.h
   ELPlotList.h
+  ELRenderOptions.h
 )
 
 set(EAVLAB_QT_SRC
@@ -114,6 +115,7 @@ set(EAVLAB_QT_SRC
   ELWindowFrame.cpp
   ELWindowManager.cpp
   Pipeline.cpp
+  ELRenderOptions.cpp
   XMLTools.cpp
 )
 
