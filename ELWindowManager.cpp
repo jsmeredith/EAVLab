@@ -581,6 +581,14 @@ ELWindowManager::ChangeWindowType(int index, const QString &type)
         windowframes[index]->SetWindow(newwin);
         emit WindowAdded(windowframes[index]->GetWindow());
     }
+    else if (type == "1D Log View")
+    {
+        EL1DWindow *newwin = new EL1DWindow(this, true);
+        QWidget *newwinsettings = newwin->GetSettings();
+        settings[index] = newwinsettings;
+        windowframes[index]->SetWindow(newwin);
+        emit WindowAdded(windowframes[index]->GetWindow());
+    }
     else if (type == "Polar View")
     {
         ELPolarWindow *newwin = new ELPolarWindow(this);

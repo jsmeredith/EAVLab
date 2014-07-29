@@ -77,7 +77,7 @@ ELMainWindow::ELMainWindow(QWidget *parent) :
     setCentralWidget(topSplitter);
 
     // I guess we want to start with a 3D window
-    windowMgr->ChangeWindowType(0, "Polar View");
+    windowMgr->ChangeWindowType(0, "3D View");
 }
 
 // ****************************************************************************
@@ -123,7 +123,7 @@ void ELMainWindow::Exit()
 void
 ELMainWindow::OpenFile()
 {
-    QString extensions = "*.vtk *.bov *.pdb *.png";
+    QString extensions = "*.vtk *.bov *.pdb *.png *.dump";
 #ifdef HAVE_SILO
     extensions += " *.silo";
     extensions += " *.chi";

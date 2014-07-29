@@ -9,8 +9,8 @@
 //
 // Modifications:
 // ****************************************************************************
-ELAttributeControl::ELAttributeControl(QWidget *parent)
-    : QWidget(parent)
+ELAttributeControl::ELAttributeControl(QWidget *parent, Qt::WindowFlags f)
+    : QWidget(parent,f)
 {
     atts = NULL;
     created = false;
@@ -39,7 +39,7 @@ ELAttributeControl::ConnectAttributes(Attribute *a)
         return;
 
     created = true;
-    QGridLayout *layout = new QGridLayout(this);
+    layout = new QGridLayout(this);
 
     if (!atts || atts->GetNumFields() == 0)
     {

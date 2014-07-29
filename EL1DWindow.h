@@ -35,7 +35,7 @@ class EL1DWindow : public QGLWidget
   protected:
     ELPlotList *settings;
   public:
-    EL1DWindow(ELWindowManager *parent);
+    EL1DWindow(ELWindowManager *parent, bool logarithmic = false);
     virtual void initializeGL();
     virtual void paintGL();
     virtual void resizeGL(int w, int h);

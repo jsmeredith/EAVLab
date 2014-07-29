@@ -2,6 +2,7 @@
 #include "ELWindowFrame.h"
 
 #include "ELWindowManager.h"
+#include "ELRenderOptions.h"
 
 #include <QPainter>
 #include <QMouseEvent>
@@ -22,12 +23,17 @@ ELWindowFrame::ELWindowFrame(int i, ELWindowManager *parent)
     index = i;
     win = NULL;
     manager = parent;
+    renderoptionsWindow = new ELRenderOptions(this);
+    renderingAtts = new RenderingAttributes;
+    renderoptionsWindow->ConnectAttributes(renderingAtts);
+    connect(renderoptionsWindow, SIGNAL(settingsChanged(Attribute*)),
+            this, SLOT(RenderOptionsChanged(Attribute*)));
     setContentsMargins(3,3,3,3);
 
     topLayout = new QGridLayout(this);
     topLayout->setContentsMargins(0,0,0,0);
 
-    activateButton = new QPushButton("Settings",this);
+    activateButton = new QPushButton("Plots",this);
     activateButton->setCheckable(true);
     connect(activateButton, SIGNAL(toggled(bool)),
             this, SLOT(activeToggled(bool)));
@@ -37,12 +43,27 @@ ELWindowFrame::ELWindowFrame(int i, ELWindowManager *parent)
     changeTypeList->addItem("(empty)");
     changeTypeList->addItem("Text Summary");
     changeTypeList->addItem("1D View");
+    changeTypeList->addItem("1D Log View");
     changeTypeList->addItem("2D View");
     changeTypeList->addItem("3D View");
     changeTypeList->addItem("Polar View");
     connect(changeTypeList, SIGNAL(currentIndexChanged(const QString &)),
             this, SLOT(WindowTypeChanged(const QString &)));
     topLayout->addWidget(changeTypeList, 0,1);
+
+    rendererList = new QComboBox(this);
+    rendererList->addItem("OpenGL");
+    rendererList->addItem("OpenGL (simple)");
+    rendererList->addItem("RayTrace");
+    connect(rendererList, SIGNAL(currentIndexChanged(const QString &)),
+            this, SLOT(RendererChanged(const QString &)));
+    topLayout->addWidget(rendererList, 0,2);
+
+    renderoptionsButton = new QPushButton("Options",this);
+    //renderoptionsButton->setCheckable(true);
+    connect(renderoptionsButton, SIGNAL(clicked()),
+            this, SLOT(RenderOptionsPushed()));
+    topLayout->addWidget(renderoptionsButton, 0,3);
 
 
     SetActive(false);
@@ -175,7 +196,7 @@ ELWindowFrame::SetWindow(QWidget *w)
         delete win;
     }
     win = w;
-    topLayout->addWidget(w, 1, 0, 2, 3);
+    topLayout->addWidget(w, 1, 0, 2, 4);
 }
 
 // ****************************************************************************
@@ -251,6 +272,7 @@ ELWindowFrame::WindowTypeChanged(const QString &type)
     changeTypeList->clear();
     changeTypeList->addItem("Text Summary");
     changeTypeList->addItem("1D View");
+    changeTypeList->addItem("1D Log View");
     changeTypeList->addItem("2D View");
     changeTypeList->addItem("3D View");
     changeTypeList->addItem("Polar View");
@@ -263,5 +285,38 @@ ELWindowFrame::WindowTypeChanged(const QString &type)
         }
     }
     changeTypeList->blockSignals(false);
+}
+
+
+#include "EL3DWindow.h"
+void
+ELWindowFrame::RendererChanged(const QString &type)
+{
+    ///\HACK!
+    if (dynamic_cast<EL3DWindow*>(win))
+    {
+        dynamic_cast<EL3DWindow*>(win)->SetRendererType(type);
+        dynamic_cast<EL3DWindow*>(win)->SetRendererOptions(renderingAtts);
+        dynamic_cast<EL3DWindow*>(win)->updateGL();
+        //win->SetRendererType(type);
+    }
+}
+
+void
+ELWindowFrame::RenderOptionsPushed()
+{
+    renderoptionsWindow->UpdateWindowFromAtts();
+    renderoptionsWindow->show();
+}
+
+
+void
+ELWindowFrame::RenderOptionsChanged(Attribute *ratts)
+{
+    if (dynamic_cast<EL3DWindow*>(win))
+    {
+        dynamic_cast<EL3DWindow*>(win)->SetRendererOptions(ratts);
+        dynamic_cast<EL3DWindow*>(win)->updateGL();
+    }
 }
 

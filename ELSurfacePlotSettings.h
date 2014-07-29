@@ -69,13 +69,17 @@ class ELSurfacePlotSettings : public QWidget
         srow++;
 
         ctCombo = new QComboBox(this);
-        ctCombo->addItem("default");
         ctCombo->addItem("dense");
         ctCombo->addItem("sharp");
         ctCombo->addItem("thermal");
         ctCombo->addItem("blue");
         ctCombo->addItem("orange");
         ctCombo->addItem("levels");
+        ctCombo->addItem("IsoL");
+        ctCombo->addItem("LinearL");
+        ctCombo->addItem("LinLhot");
+        ctCombo->addItem("CubicL");
+        ctCombo->addItem("CubicYF");
         topLayout->addWidget(new QLabel("Color Table:", this), srow,0);
         topLayout->addWidget(ctCombo, srow,1);
         srow++;
@@ -103,12 +107,12 @@ class ELSurfacePlotSettings : public QWidget
         connect(styleCombo, SIGNAL(activated(const QString&)),
                 this, SLOT(StyleChanged(const QString&)));
     }
-    void PipelineUpdated(Pipeline *p)
+    void PipelineUpdated(Pipeline *)
     {
         // rebuild the pipeline combo box
         int index = -1;
         pipelineCombo->clear();
-        for (int i=0; i<Pipeline::allPipelines.size(); i++)
+        for (unsigned int i=0; i<Pipeline::allPipelines.size(); i++)
         {
             pipelineCombo->addItem(Pipeline::allPipelines[i]->GetName().c_str());
             if (plot && plot->pipe == Pipeline::allPipelines[i])
@@ -146,7 +150,7 @@ class ELSurfacePlotSettings : public QWidget
         fieldList.push_back(vector<string>());
         if (plot->cellset == "" && plot->field == "")
             selItem = ptsItem;
-        for (int i=0; i<dsinfo.nodalfields.size(); ++i)
+        for (unsigned int i=0; i<dsinfo.nodalfields.size(); ++i)
         {
             QTreeWidgetItem *fItem = new QTreeWidgetItem(QStringList()
                                                          <<dsinfo.nodalfields[i].name.c_str()
@@ -159,7 +163,7 @@ class ELSurfacePlotSettings : public QWidget
         ptsItem->setExpanded(true);
 
 
-        for (int k=0; k<dsinfo.cellsets.size(); ++k)
+        for (unsigned int k=0; k<dsinfo.cellsets.size(); ++k)
         {
             string csname = dsinfo.cellsets[k].name;
             QTreeWidgetItem *csItem = new QTreeWidgetItem(QStringList()
@@ -170,7 +174,7 @@ class ELSurfacePlotSettings : public QWidget
             fieldList.push_back(vector<string>());
             if (plot->cellset == csname && plot->field == "")
                 selItem = csItem;
-            for (int i=0; i<dsinfo.nodalfields.size(); ++i)
+            for (unsigned int i=0; i<dsinfo.nodalfields.size(); ++i)
             {
                 QTreeWidgetItem *fItem = new QTreeWidgetItem(QStringList()
                                                              <<dsinfo.nodalfields[i].name.c_str()
@@ -180,7 +184,7 @@ class ELSurfacePlotSettings : public QWidget
                 if (plot->cellset == csname && plot->field == dsinfo.nodalfields[i].name)
                     selItem = fItem;
             }
-            for (int i=0; i<dsinfo.cellsetfields[csname].size(); ++i)
+            for (unsigned int i=0; i<dsinfo.cellsetfields[csname].size(); ++i)
             {
                 QTreeWidgetItem *fItem = new QTreeWidgetItem(QStringList()
                                                              <<dsinfo.cellsetfields[csname][i].name.c_str()
@@ -211,7 +215,7 @@ class ELSurfacePlotSettings : public QWidget
         wireframeChk->setChecked(plot->wireframe);
         SetColorTableCombo(plot->colortable);
         SetColorButtonColor(plot->color);
-        for (int i=0; i<Pipeline::allPipelines.size(); i++)
+        for (unsigned int i=0; i<Pipeline::allPipelines.size(); i++)
         {
             if (plot->pipe == Pipeline::allPipelines[i])
             {
@@ -221,14 +225,14 @@ class ELSurfacePlotSettings : public QWidget
         }
     }
   public slots:
-    void PipelineChanged(const QString &newpipe)
+    void PipelineChanged(const QString &)
     {
         int index = pipelineCombo->currentIndex();
         if (index < 0)
             return;
         if (!plot)
             return;
-        if (index >= Pipeline::allPipelines.size())
+        if (index >= (int)Pipeline::allPipelines.size())
             return;
 
         plot->pipe = Pipeline::allPipelines[index];
@@ -274,10 +278,6 @@ class ELSurfacePlotSettings : public QWidget
         if (!plot)
             return;
 
-        // hack: delete the renderer so we can re-do it
-        delete plot->renderer;
-        plot->renderer = NULL;
-
         plot->barsFor1D = (style == "Bars");
 
         emit SomethingChanged();
@@ -286,10 +286,6 @@ class ELSurfacePlotSettings : public QWidget
     {
         if (!plot)
             return;
-
-        // hack: delete the renderer so we can re-do it
-        delete plot->renderer;
-        plot->renderer = NULL;
 
         plot->wireframe = state;
 
@@ -306,16 +302,6 @@ class ELSurfacePlotSettings : public QWidget
                      c.GetComponentAsByte(2));
         color = QColorDialog::getColor(color, this);
 
-        // hack: delete the renderer so we can re-do it
-        // (note: if you do this too soon, i.e. before
-        // the color dialog comes up, then when the dialog
-        // comes up, it will re-draw the window, and
-        // in the process re-create the renderer with the
-        // old color.  oops!  so wait to delete the renderer
-        // until you have the right new color to use.)
-        delete plot->renderer;
-        plot->renderer = NULL;
-
         plot->color = eavlColor(color.redF(),
                                 color.greenF(),
                                 color.blueF());
@@ -328,10 +314,6 @@ class ELSurfacePlotSettings : public QWidget
     {
         if (!plot)
             return;
-        ///\todo: we're on track to have a bunch of this junk
-        /// any time we change stuff; fix it:
-        delete plot->renderer;
-        plot->renderer = NULL;
 
         plot->colortable = ct.toStdString();
         emit SomethingChanged();
@@ -342,8 +324,9 @@ class ELSurfacePlotSettings : public QWidget
             return;
 
         // here, we set the field index and cell index given a field name
-        delete plot->renderer;
-        plot->renderer = NULL;
+
+        // need to force an update when the sel
+        plot->UpdateDataSet(plot->pipe->results.back());
 
         string oldCS = plot->cellset;
         string oldF = plot->field;

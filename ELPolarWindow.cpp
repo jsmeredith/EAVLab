@@ -7,10 +7,11 @@
 #include <QActionGroup>
 
 #include <eavlColorTable.h>
-#include <eavlRenderer.h>
+#include <eavlPlot.h>
 #include <eavlPolarWindow.h>
 #include <eavlScene.h>
 #include <eavlTexture.h>
+#include <eavlSceneRendererGL.h>
 
 #include <cfloat>
 
@@ -34,7 +35,8 @@ ELPolarWindow::ELPolarWindow(ELWindowManager *parent)
     showmesh = false;
 
     scene = new eavlPolarGLScene();
-    window = new eavlPolarWindow(eavlColor(0.0, 0.12, 0.25), NULL, scene);
+    window = new eavlPolarWindow(eavlColor(0.0, 0.12, 0.25), NULL, scene,
+                                 new eavlSceneRendererGL);
 
     // force creation
     GetSettings();
@@ -79,7 +81,7 @@ ELPolarWindow::PipelineUpdated(Pipeline *pipe)
 // Modifications:
 // ****************************************************************************
 void
-ELPolarWindow::CurrentPipelineChanged(int index)
+ELPolarWindow::CurrentPipelineChanged(int)
 {
     /*
     currentPipeline = index;
@@ -129,11 +131,12 @@ ELPolarWindow::UpdatePlots()
         Plot &p = settings->plots[i];
         if (!p.pipe || p.pipe->results.size() == 0)
             continue;
-        p.CreateRenderer(&TransformTo2DCart);
-        if (!p.renderer)
+        p.xform = &TransformTo2DCart;
+        p.CreateEAVLPlot();
+        if (!p.eavlplot)
             continue;
         shoulddraw = true;
-        scene->plots.push_back(p.renderer);
+        scene->plots.push_back(p.eavlplot);
     }
     return shoulddraw;
 }

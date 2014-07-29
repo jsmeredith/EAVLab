@@ -32,13 +32,13 @@ struct DSInfo
     void Print(std::ostream &out)
     {
         out << "Nodal:\n";
-        for (int i=0; i<nodalfields.size(); i++)
+        for (unsigned int i=0; i<nodalfields.size(); i++)
         {
             out << "  " << nodalfields[i].name << endl;
         }
 
         out << "CellSets:\n";
-        for (int i=0; i<cellsets.size(); i++)
+        for (unsigned int i=0; i<cellsets.size(); i++)
         {
             out << "  " << cellsets[i].name << endl;
         }
@@ -47,7 +47,7 @@ struct DSInfo
              it != cellsetfields.end() ; ++it)
         {
             cerr << "CellSet "<<it->first<<endl;
-            for (int i=0; i<it->second.size(); i++)
+            for (unsigned int i=0; i<it->second.size(); i++)
             {
                 out << "  " << it->second[i].name << endl;
             }

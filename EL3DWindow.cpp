@@ -1,17 +1,22 @@
 // Copyright 2012-2013 UT-Battelle, LLC.  See LICENSE.txt for more information.
 #include "EL3DWindow.h"
 
+#include "ELRenderOptions.h"
+
 #include <QMouseEvent>
 #include <QToolBar>
 #include <QAction>
 #include <QActionGroup>
 
 #include <eavlColorTable.h>
-#include <eavlRenderer.h>
+#include <eavlPlot.h>
 #include <eavl3DWindow.h>
 #include <eavlScene.h>
 #include <eavlTexture.h>
 #include <eavlTextAnnotation.h>
+#include <eavlSceneRendererSimpleGL.h>
+#include <eavlSceneRendererGL.h>
+#include <eavlSceneRendererSimpleRT.h>
 
 #include <cfloat>
 
@@ -26,6 +31,8 @@
 EL3DWindow::EL3DWindow(ELWindowManager *parent)
     : QGLWidget(parent)
 {
+    setFormat(QGLFormat(QGL::SampleBuffers));
+
     settings = NULL;
 
     mousedown = false;
@@ -35,7 +42,8 @@ EL3DWindow::EL3DWindow(ELWindowManager *parent)
     showmesh = false;
 
     scene = new eavl3DGLScene();
-    window = new eavl3DWindow(eavlColor(0.15, 0.0, 0.25), NULL, scene);
+    window = new eavl3DWindow(eavlColor(0.15, 0.0, 0.25), NULL, scene,
+                              new eavlSceneRendererGL);
 
     // force creation
     GetSettings();
@@ -80,7 +88,7 @@ EL3DWindow::PipelineUpdated(Pipeline *pipe)
 // Modifications:
 // ****************************************************************************
 void
-EL3DWindow::CurrentPipelineChanged(int index)
+EL3DWindow::CurrentPipelineChanged(int)
 {
     /*
     //cerr << "EL3DWindow::CurrentPipelineChanged\n";
@@ -122,11 +130,11 @@ EL3DWindow::UpdatePlots()
         Plot &p = settings->plots[i];
         if (!p.pipe || p.pipe->results.size() == 0)
             continue;
-        p.CreateRenderer();
-        if (!p.renderer)
+        p.CreateEAVLPlot();
+        if (!p.eavlplot)
             continue;
         shoulddraw = true;
-        scene->plots.push_back(p.renderer);
+        scene->plots.push_back(p.eavlplot);
     }
     return shoulddraw;
 }
@@ -197,6 +205,8 @@ EL3DWindow::paintGL()
 
 #if 0
     // various tests of font rendering
+    glEnable(GL_DEPTH_TEST);
+    glDisable(GL_LIGHTING);
     static eavlTextAnnotation *t1=NULL,*t1b=NULL,*t1c=NULL, *t2=NULL,*t3=NULL,*t3b=NULL, *t4=NULL,*t4b=NULL;
     if (!t1)
     {
@@ -213,7 +223,7 @@ EL3DWindow::paintGL()
                                          eavlColor::white,
                                          1.0,
                                          -5,0,0,
-                                         1,0,-1,
+                                         -1,0,1,
                                          0,1,0);
         t3 = new eavlBillboardTextAnnotation(window,"Test 3D billboard text, height=0.05 in screen space at (0,5,0)",
                                     eavlColor::white,
@@ -235,14 +245,14 @@ EL3DWindow::paintGL()
     }
 
 
-    t1->Render(view);
-    t1b->Render(view);
-    t1c->Render(view);
-    t2->Render(view);
-    t3->Render(view);
-    t3b->Render(view);
-    t4->Render(view);
-    t4b->Render(view);
+    t1->Render(window->view);
+    t1b->Render(window->view);
+    t1c->Render(window->view);
+    t2->Render(window->view);
+    t3->Render(window->view);
+    t3b->Render(window->view);
+    t4->Render(window->view);
+    t4b->Render(window->view);
 #endif
 
 }
@@ -423,4 +433,33 @@ void
 EL3DWindow::SomethingChanged()
 {
     updateGL();
+}
+
+
+void
+EL3DWindow::SetRendererType(const QString &type)
+{
+    if (type == "OpenGL")
+        window->SetSceneRenderer(new eavlSceneRendererGL);
+    if (type == "OpenGL (simple)")
+        window->SetSceneRenderer(new eavlSceneRendererSimpleGL);
+    else if (type == "RayTrace")
+        window->SetSceneRenderer(new eavlSceneRendererSimpleRT);
+    else
+        ;
+}
+
+void
+EL3DWindow::SetRendererOptions(Attribute *atts)
+{
+    RenderingAttributes *r = dynamic_cast<RenderingAttributes*>(atts);
+    if (!r)
+        return;
+
+    eavlSceneRenderer *sr = window->GetSceneRenderer();
+    sr->SetAmbientCoefficient(r->Ka);
+    sr->SetDiffuseCoefficient(r->Kd);
+    sr->SetSpecularCoefficient(r->Ks);
+    sr->SetLightDirection(r->Lx, r->Ly, r->Lz);
+    sr->SetEyeLight(r->eyeLight);
 }

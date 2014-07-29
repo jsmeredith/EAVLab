@@ -114,7 +114,7 @@ class ELPlotList : public QWidget
     void UpdatePlotList()
     {
         //plotList->clear();
-        for (int i=0; i<plots.size(); ++i)
+        for (unsigned int i=0; i<plots.size(); ++i)
         {
             Plot &p = plots[i];
             QTreeWidgetItem *item = plotList->topLevelItem(i);
@@ -141,7 +141,7 @@ class ELPlotList : public QWidget
             }
             */
         }
-        for (int i=plots.size(); i<plotList->topLevelItemCount(); ++i)
+        for (int i=(int)plots.size(); i<plotList->topLevelItemCount(); ++i)
             delete plotList->takeTopLevelItem(i);
     }
     void PipelineUpdated(Pipeline *pipe)
@@ -159,7 +159,7 @@ class ELPlotList : public QWidget
             plots.push_back(plot);
         }
 
-        for (int i=0; i<plots.size(); i++)
+        for (unsigned int i=0; i<plots.size(); i++)
         {
             Plot &p = plots[i];
             if (p.pipe == pipe)
@@ -256,7 +256,7 @@ class ELPlotList : public QWidget
         delPlotBtn->setEnabled(true);
         if (currentPlotIndex > 0)
             upPlotBtn->setEnabled(true);
-        if (currentPlotIndex < plots.size() - 1)
+        if (currentPlotIndex < (int)plots.size() - 1)
             downPlotBtn->setEnabled(true);
 
 

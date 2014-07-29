@@ -1,4 +1,5 @@
-CONFIG += debug
+#CONFIG += debug
+CONFIG += release
 
 QT       += core gui opengl
 
@@ -7,6 +8,10 @@ TEMPLATE = app
 
 QMAKE_CFLAGS_X86_64 += -mmacosx-version-min=10.7
 QMAKE_CXXFLAGS_X86_64 += -mmacosx-version-min=10.7
+
+##QMAKE_CXXFLAGS += -DLEFTHANDED
+##QMAKE_CXXFLAGS += -fopenmp
+##LIBS += -fopenmp
 
 SOURCES += main.cpp\
     ELAttributeControl.cpp \
@@ -20,12 +25,13 @@ SOURCES += main.cpp\
     ELPolarWindow.cpp \
     ELBasicInfoWindow.cpp \
     ELPipelineBuilder.cpp \
+    ELRenderOptions.cpp \
     ELSources.cpp \
     Attribute.cpp \
     Pipeline.cpp \
     XMLTools.cpp
 
-
+#EAVLROOT = /home/js9/eavl/2013-07-11_work/EAVL
 EAVLROOT = $$(EAVL)
 isEmpty(EAVLROOT) {
   warning("Expected an EAVL environment varible to be set that points")
@@ -44,8 +50,8 @@ HEADERS  += $$files(*.h) \
 
 FORMS    +=
 
-DEPENDPATH += $$EAVLROOT/config $$EAVLROOT/src/common $$EAVLROOT/src/fonts $$EAVLROOT/src/importers $$EAVLROOT/src/filters $$EAVLROOT/src/exporters $$EAVLROOT/src/math $$EAVLROOT/src/rendering
-INCLUDEPATH += $$EAVLROOT/config $$EAVLROOT/src/common $$EAVLROOT/src/fonts $$EAVLROOT/src/importers $$EAVLROOT/src/filters $$EAVLROOT/src/exporters $$EAVLROOT/src/math $$EAVLROOT/src/rendering
+DEPENDPATH += $$EAVLROOT/config $$EAVLROOT/src/common $$EAVLROOT/src/fonts $$EAVLROOT/src/importers $$EAVLROOT/src/filters $$EAVLROOT/src/exporters $$EAVLROOT/src/math $$EAVLROOT/src/rendering $$EAVLROOT/src/operations
+INCLUDEPATH += $$EAVLROOT/config $$EAVLROOT/src/common $$EAVLROOT/src/fonts $$EAVLROOT/src/importers $$EAVLROOT/src/filters $$EAVLROOT/src/exporters $$EAVLROOT/src/math $$EAVLROOT/src/rendering $$EAVLROOT/src/operations
 
 win32 {
   LIBS += -L$$EAVLROOT/Debug/lib -L$$EAVLROOT/../eavl-build-desktop/debug/lib -leavl

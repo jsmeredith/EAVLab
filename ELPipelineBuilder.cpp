@@ -147,7 +147,7 @@ ELPipelineBuilder::NewPipeline()
 
 void ELPipelineBuilder::UpdatePipelineCombo()
 {
-    for (int i=0; i<Pipeline::allPipelines.size(); i++)
+    for (unsigned int i=0; i<Pipeline::allPipelines.size(); i++)
     {
         Pipeline *p = Pipeline::allPipelines[i];
         pipelineChooser->setItemText(i, p->GetName().c_str());
@@ -510,7 +510,7 @@ ELPipelineBuilder::deleteCurrentOp()
         if (rowindex == 0)
             return;
         int opindex = rowindex - 1;
-        for (int i = opindex; i < pipeline->ops.size()-1; ++i)
+        for (int i = opindex; i < (int)pipeline->ops.size()-1; ++i)
             pipeline->ops[i] = pipeline->ops[i+1];
         pipeline->ops.resize(pipeline->ops.size()-1);
         rebuildPipelineDisplay();
