@@ -41,6 +41,7 @@ class ELMainWindow : public QMainWindow
 
   public slots:
     void PipelineUpdated(Pipeline *pipe);
+    void SaveImage();
     void OpenFile();
     void Exit();
     void WindowAdded(QWidget*);

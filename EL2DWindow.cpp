@@ -10,8 +10,9 @@
 #include <eavlPlot.h>
 #include <eavl2DWindow.h>
 #include <eavlScene.h>
-#include <eavlTexture.h>
 #include <eavlSceneRendererGL.h>
+#include <eavlRenderSurfaceGL.h>
+#include <eavlWorldAnnotatorGL.h>
 
 #include <cfloat>
 
@@ -34,9 +35,12 @@ EL2DWindow::EL2DWindow(ELWindowManager *parent)
     showghosts = false;
     showmesh = false;
 
-    scene = new eavl2DGLScene();
-    window = new eavl2DWindow(eavlColor(0.0, 0.12, 0.25), NULL, scene,
-                              new eavlSceneRendererGL);
+    scene = new eavl2DScene();
+    window = new eavl2DWindow(eavlColor(0.0, 0.12, 0.25),
+                              new eavlRenderSurfaceGL,
+                              scene,
+                              new eavlSceneRendererGL,
+                              new eavlWorldAnnotatorGL);
 
     // force creation
     GetSettings();
@@ -194,41 +198,47 @@ EL2DWindow::paintGL()
     window->Paint();
 
     // test of font rendering
-#if 0
-    static eavlTextAnnotation *tt=NULL;
-    if (!tt)
+#if 1
+    static eavlTextAnnotation *t1=NULL,*t2=NULL,*t3=NULL,*t4=NULL, *t5=NULL;
+    if (!t1)
     {
-        switch (1)
-        {
-          case 1:
-            tt = new eavlWorldTextAnnotation(window,"Test 2D world text, [] height=0.05 at (0.3,0.3)",
+        t1 = new eavlWorldTextAnnotation(window,
+            "Test 2D world text, [] height=0.05 at (0.3,0.7)",
+                                         eavlColor::white, .05,
+                                         0.3, 0.7, 0,
+                                         0,0,+1, // "normal" is towards the viewer
+                                         -1,1,0); // "up" is towards the upper-left
+        // default anchor = lower-left
+
+        t2 = new eavlScreenTextAnnotation(window,
+            "Test 2D screen text, [] height=0.05 centered with top anchor at 0.9y",
+                                          eavlColor::white, .05,
+                                          0, 0.9);
+        t2->SetRawAnchor(0,1);
+
+        t3 = new eavlBillboardTextAnnotation(window,
+            "Test 2D billboard text, [] height=0.05 screen space at (.3,.3)",
                                              eavlColor::white, .05,
-                                             0.3, 0.3, 0,
-                                             0,0,-1,   -1,1,0);
-            //tt->SetAnchor(.5,.5);
-            break;
-          case 2:
-            tt = new eavlScreenTextAnnotation(window,"Test 2D text, [] height=0.05 centered with top anchor at 0.9y",
-                                              eavlColor::white, .05,
-                                              0, 0.9);
-            tt->SetAnchor(.5,1);
-            break;
-          case 3:
-            tt = new eavlBillboardTextAnnotation(window,"Test 2D text, [] height=0.05 screen space at (.3,.3)",
-                                                 eavlColor::white, .05,
-                                                 0.3, 0.3, 0.0, true);
-            //tt->SetAnchor(.5,0);
-            break;
-          case 4:
-            tt = new eavlBillboardTextAnnotation(window,"Test 2D text, [] height=0.05 world space at (.3,.3)",
-                                                 eavlColor::white, .05,
-                                                 0.3, 0.3, 0.0, false);
-            tt->SetAnchor(0,0);
-            break;
-        }
+                                             0.3, 0.3, 0.0, true);
+
+        t4 = new eavlBillboardTextAnnotation(window,
+            "Test 2D billboard text, [] height=0.05 world space at (.3,.5)",
+                                             eavlColor::white, .05,
+                                             0.3, 0.5, 0.0, false);
+        //t4->SetRawAnchor(-1,-1);
+
+        t5 = new eavlBillboardTextAnnotation(window,
+            "Test 2D billboard text, [] height=0.05 world space at (.3,.5) at 135deg",
+                                             eavlColor::white, .05,
+                                             0.3, 0.5, 0.0, false,
+                                             135);
     }
     glDisable(GL_DEPTH_TEST);
-    tt->Render(view);
+    t1->Render(window->view);
+    t2->Render(window->view);
+    t3->Render(window->view);
+    t4->Render(window->view);
+    t5->Render(window->view);
     ///\todo: hack: should SetMatrices maybe do this?
 #endif
 

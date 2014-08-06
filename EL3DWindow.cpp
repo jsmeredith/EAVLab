@@ -13,12 +13,13 @@
 #include <eavlPlot.h>
 #include <eavl3DWindow.h>
 #include <eavlScene.h>
-#include <eavlTexture.h>
 #include <eavlTextAnnotation.h>
 #include <eavlSceneRendererSimpleGL.h>
 #include <eavlSceneRendererGL.h>
 #include <eavlSceneRendererSimpleRT.h>
 #include <eavlSceneRendererSimpleVR.h>
+#include <eavlRenderSurfaceGL.h>
+#include <eavlWorldAnnotatorGL.h>
 
 #include <cfloat>
 
@@ -43,9 +44,12 @@ EL3DWindow::EL3DWindow(ELWindowManager *parent)
     showghosts = false;
     showmesh = false;
 
-    scene = new eavl3DGLScene();
-    window = new eavl3DWindow(eavlColor(0.15, 0.0, 0.25), NULL, scene,
-                              new eavlSceneRendererGL);
+    scene = new eavl3DScene();
+    window = new eavl3DWindow(eavlColor(0.15, 0.0, 0.25),
+                              new eavlRenderSurfaceGL,
+                              scene,
+                              new eavlSceneRendererGL,
+                              new eavlWorldAnnotatorGL);
 
     // force creation
     GetSettings();
@@ -205,11 +209,11 @@ EL3DWindow::paintGL()
     window->Paint();
 
 
-#if 0
+#if 1
     // various tests of font rendering
     glEnable(GL_DEPTH_TEST);
     glDisable(GL_LIGHTING);
-    static eavlTextAnnotation *t1=NULL,*t1b=NULL,*t1c=NULL, *t2=NULL,*t3=NULL,*t3b=NULL, *t4=NULL,*t4b=NULL;
+    static eavlTextAnnotation *t1=NULL,*t1b=NULL,*t1c=NULL, *t2a=NULL,*t2b=NULL,*t3=NULL,*t3b=NULL, *t4=NULL,*t4b=NULL;
     if (!t1)
     {
         t1 = new eavlScreenTextAnnotation(window,"Test 2D text, [] height=0.05 near upper-left corner (-.9,.9)",
@@ -221,10 +225,16 @@ EL3DWindow::paintGL()
         t1c = new eavlScreenTextAnnotation(window,"Test 2D text, [] height=0.05 at (-.9,-.9) oriented at 90 degrees",
                                            eavlColor::white, .05,
                                            -.9,-.9, 90.);
-        t2 = new eavlWorldTextAnnotation(window,"Test 3D text (You), height=1.0 in 3D space at (-5,0,0), diagonal along X=Z, Y=up",
+        t2a = new eavlWorldTextAnnotation(window,"Test 3D text (You), height=1.0 in 3D space at (-5,0,0), diagonal along X=Z, Y=up",
                                          eavlColor::white,
                                          1.0,
                                          -5,0,0,
+                                         -1,0,1,
+                                         0,1,0);
+        t2b = new eavlWorldTextAnnotation(window,"Test 3D text (You), height=1.0 in 3D space at (0,0,-5), diagonal along X=Z, Y=up",
+                                         eavlColor::white,
+                                         1.0,
+                                         0,0,-5,
                                          -1,0,1,
                                          0,1,0);
         t3 = new eavlBillboardTextAnnotation(window,"Test 3D billboard text, height=0.05 in screen space at (0,5,0)",
@@ -250,7 +260,8 @@ EL3DWindow::paintGL()
     t1->Render(window->view);
     t1b->Render(window->view);
     t1c->Render(window->view);
-    t2->Render(window->view);
+    t2a->Render(window->view);
+    t2b->Render(window->view);
     t3->Render(window->view);
     t3b->Render(window->view);
     t4->Render(window->view);

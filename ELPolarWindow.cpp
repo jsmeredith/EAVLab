@@ -10,8 +10,9 @@
 #include <eavlPlot.h>
 #include <eavlPolarWindow.h>
 #include <eavlScene.h>
-#include <eavlTexture.h>
 #include <eavlSceneRendererGL.h>
+#include <eavlRenderSurfaceGL.h>
+#include <eavlWorldAnnotatorGL.h>
 
 #include <cfloat>
 
@@ -34,9 +35,12 @@ ELPolarWindow::ELPolarWindow(ELWindowManager *parent)
     showghosts = false;
     showmesh = false;
 
-    scene = new eavlPolarGLScene();
-    window = new eavlPolarWindow(eavlColor(0.0, 0.12, 0.25), NULL, scene,
-                                 new eavlSceneRendererGL);
+    scene = new eavlPolarScene();
+    window = new eavlPolarWindow(eavlColor(0.0, 0.12, 0.25),
+                                 new eavlRenderSurfaceGL,
+                                 scene,
+                                 new eavlSceneRendererGL,
+                                 new eavlWorldAnnotatorGL);
 
     // force creation
     GetSettings();

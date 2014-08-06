@@ -36,12 +36,16 @@ ELMainWindow::ELMainWindow(QWidget *parent) :
 
     QAction *open = file->addAction(tr("Open"));
     open->setShortcut(QString(tr("Ctrl+O")));
+    //QAction *save = file->addAction(tr("Save Image"));
+    //save->setShortcut(QString(tr("Ctrl+S")));
     QAction *exit = file->addAction(tr("Exit"));
     exit->setShortcut(QString(tr("Ctrl+X")));
     menuBar()->addMenu(file);
 
     connect(open, SIGNAL(triggered()),
             this, SLOT(OpenFile()));
+    //connect(save, SIGNAL(triggered()),
+    //        this, SLOT(SaveImage()));
     connect(exit, SIGNAL(triggered()),
             this, SLOT(Exit()));
 
@@ -108,6 +112,32 @@ void ELMainWindow::Exit()
     close();
 }
 
+
+// ****************************************************************************
+// Method:  ELMainWindow::OpenFile
+//
+// Purpose:
+///   Slot for File -> Save Image.
+//
+// Programmer:  Jeremy Meredith
+// Creation:    July 25, 2014
+//
+// Modifications:
+// ****************************************************************************
+void
+ELMainWindow::SaveImage()
+{
+    QString selectedFilter;
+    QString filename =  QFileDialog::getSaveFileName(this,
+                                                     "Save File",
+                                                     QString(),
+                                                     tr("PNM (*.pnm)"),
+                                                     &selectedFilter);
+    if (filename.isNull())
+        return;
+
+    cerr << "save as " << filename.toStdString() << " of type " << selectedFilter.toStdString() << endl;
+}
 
 // ****************************************************************************
 // Method:  ELMainWindow::OpenFile

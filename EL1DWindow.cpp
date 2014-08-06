@@ -10,10 +10,11 @@
 #include <eavlPlot.h>
 #include <eavl1DWindow.h>
 #include <eavlScene.h>
-#include <eavlTexture.h>
 #include <eavlTextAnnotation.h>
 #include <eavlSceneRendererGL.h>
 #include <eavlSceneRendererSimpleGL.h>
+#include <eavlRenderSurfaceGL.h>
+#include <eavlWorldAnnotatorGL.h>
 
 #include <cfloat>
 
@@ -37,9 +38,12 @@ EL1DWindow::EL1DWindow(ELWindowManager *parent, bool logarithmic)
     showmesh = false;
     barstyle = false;
 
-    scene = new eavl1DGLScene();
-    window = new eavl1DWindow(eavlColor::white, NULL, scene,
-                              new eavlSceneRendererGL);
+    scene = new eavl1DScene();
+    window = new eavl1DWindow(eavlColor::white,
+                              new eavlRenderSurfaceGL,
+                              scene,
+                              new eavlSceneRendererGL,
+                              new eavlWorldAnnotatorGL);
 
     if (logarithmic)
         window->view.view2d.logy = true;
