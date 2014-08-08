@@ -198,8 +198,8 @@ EL2DWindow::paintGL()
     window->Paint();
 
     // test of font rendering
-#if 1
-    static eavlTextAnnotation *t1=NULL,*t2=NULL,*t3=NULL,*t4=NULL, *t5=NULL;
+#if 0
+    static eavlTextAnnotation *t1=NULL,*t2=NULL,*t3=NULL,*t4=NULL, *t5=NULL, *t6=NULL, *t7=NULL, *t8=NULL;
     if (!t1)
     {
         t1 = new eavlWorldTextAnnotation(window,
@@ -232,14 +232,30 @@ EL2DWindow::paintGL()
                                              eavlColor::white, .05,
                                              0.3, 0.5, 0.0, false,
                                              135);
+        t6 = new eavlViewportAnchoredScreenTextAnnotation(window,
+                                                          "Test viewport anchored text upper-right inside viewport",
+                                                          eavlColor::white, .035,
+                                                          1,1, 0,0, 0.0);
+        t6->SetAlignment(eavlTextAnnotation::Right, eavlTextAnnotation::Top);
+        t7 = new eavlViewportAnchoredScreenTextAnnotation(window,
+                                                          "Test next line viewport",
+                                                          eavlColor::white, .035,
+                                                          1,1, 0,-.035, 0.0);
+        t7->SetAlignment(eavlTextAnnotation::Right, eavlTextAnnotation::Top);
+        t8 = new eavlViewportAnchoredScreenTextAnnotation(window,
+                                                          "Test outside viewport",
+                                                          eavlColor::white, .035,
+                                                          -1,-1, 0,0, 0.0);
+        t8->SetAlignment(eavlTextAnnotation::Left, eavlTextAnnotation::Top);
     }
-    glDisable(GL_DEPTH_TEST);
     t1->Render(window->view);
     t2->Render(window->view);
     t3->Render(window->view);
     t4->Render(window->view);
     t5->Render(window->view);
-    ///\todo: hack: should SetMatrices maybe do this?
+    t6->Render(window->view);
+    t7->Render(window->view);
+    t8->Render(window->view);
 #endif
 
 
