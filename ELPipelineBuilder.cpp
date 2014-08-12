@@ -22,6 +22,7 @@
 #include "IsosurfaceOperation.h"
 #include "HistogramOperation.h"
 #include "SurfaceNormalsOperation.h"
+#include "ThresholdOperation.h"
 #include "TransformOperation.h"
 
 // ****************************************************************************
@@ -80,6 +81,7 @@ ELPipelineBuilder::ELPipelineBuilder(QWidget *parent)
         "ExternalFace",
         "Histogram",
         "SurfaceNormals",
+        "Threshold",
         "Transform",
         NULL
     };
@@ -261,6 +263,8 @@ ELPipelineBuilder::newOperation()
         pipeline->ops.push_back(new HistogramOperation);
     else if (actionname == "SurfaceNormals")
         pipeline->ops.push_back(new SurfaceNormalsOperation);
+    else if (actionname == "Threshold")
+        pipeline->ops.push_back(new ThresholdOperation);
     else if (actionname == "Transform")
         pipeline->ops.push_back(new TransformOperation);
     else
