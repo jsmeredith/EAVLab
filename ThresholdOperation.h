@@ -24,6 +24,7 @@ class ThresholdAttributes : public Attribute
     string field;
     float minvalue;
     float maxvalue;
+    bool all_points_required;
   public:
     virtual const char *GetType() {return "ThresholdAttributes";}
     ThresholdAttributes() : Attribute()
@@ -37,9 +38,10 @@ class ThresholdAttributes : public Attribute
     }
     virtual void AddFields()
     {
-        Add("field", field);
-        Add("minvalue", minvalue);
-        Add("maxvalue", maxvalue);
+        Add("Field name", field);
+        Add("Minimum value", minvalue);
+        Add("Maximum value", maxvalue);
+        Add("Require all cell points in range for nodal fields", all_points_required);
     }
     
 };
@@ -103,6 +105,7 @@ class ThresholdOperation : public Operation
         mutator->SetCellSet(input->GetCellSet(0)->GetName());
         mutator->SetField(atts->field);
         mutator->SetRange(atts->minvalue, atts->maxvalue);
+        mutator->SetNodalThresholdAllPointsRequired(atts->all_points_required);
         mutator->Execute();
         output = input;
     }
