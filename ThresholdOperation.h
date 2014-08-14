@@ -21,7 +21,7 @@
 class ThresholdAttributes : public Attribute
 {
   public:
-    string field;
+    string field, cellset;
     float minvalue;
     float maxvalue;
     bool all_points_required;
@@ -30,6 +30,7 @@ class ThresholdAttributes : public Attribute
     ThresholdAttributes() : Attribute()
     {
         field = "(default)";
+        cellset = "(default)";
         minvalue = -FLT_MAX;
         maxvalue = +FLT_MAX;
     }
@@ -39,6 +40,7 @@ class ThresholdAttributes : public Attribute
     virtual void AddFields()
     {
         Add("Field name", field);
+	Add("Cell set", cellset);
         Add("Minimum value", minvalue);
         Add("Maximum value", maxvalue);
         Add("Require all cell points in range for nodal fields", all_points_required);
@@ -101,8 +103,10 @@ class ThresholdOperation : public Operation
     virtual void Execute()
     {
         mutator->SetDataSet(input);
-        ///\todo: assuming cell set 0
-        mutator->SetCellSet(input->GetCellSet(0)->GetName());
+	if (atts->cellset == "(default)")
+	    mutator->SetCellSet(input->GetCellSet(0)->GetName());
+	else
+	    mutator->SetCellSet(atts->cellset);
         mutator->SetField(atts->field);
         mutator->SetRange(atts->minvalue, atts->maxvalue);
         mutator->SetNodalThresholdAllPointsRequired(atts->all_points_required);
