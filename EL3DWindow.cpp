@@ -18,6 +18,8 @@
 #include <eavlSceneRendererGL.h>
 #include <eavlSceneRendererSimpleRT.h>
 #include <eavlSceneRendererSimpleVR.h>
+#include <eavlSceneRendererSimplePVR.h>
+#include <eavlSceneRendererRT.h>
 #include <eavlRenderSurfaceGL.h>
 #include <eavlWorldAnnotatorGL.h>
 
@@ -463,10 +465,14 @@ EL3DWindow::SetRendererType(const QString &type)
         window->SetSceneRenderer(new eavlSceneRendererGL);
     if (type == "OpenGL (simple)")
         window->SetSceneRenderer(new eavlSceneRendererSimpleGL);
-    else if (type == "RayTrace")
+    else if (type == "RayTrace (simple")
         window->SetSceneRenderer(new eavlSceneRendererSimpleRT);
+    else if (type == "RayTrace")
+        window->SetSceneRenderer(new eavlSceneRendererRT);
     else if (type == "Volume")
         window->SetSceneRenderer(new eavlSceneRendererSimpleVR);
+    else if (type == "Volume (parallel)")
+        window->SetSceneRenderer(new eavlSceneRendererSimplePVR);
     else
         ;
 }

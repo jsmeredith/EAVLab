@@ -55,7 +55,9 @@ ELWindowFrame::ELWindowFrame(int i, ELWindowManager *parent)
     rendererList->addItem("OpenGL");
     rendererList->addItem("OpenGL (simple)");
     rendererList->addItem("RayTrace");
+    rendererList->addItem("RayTrace (simple)");
     rendererList->addItem("Volume");
+    rendererList->addItem("Volume (parallel)");
     connect(rendererList, SIGNAL(currentIndexChanged(const QString &)),
             this, SLOT(RendererChanged(const QString &)));
     topLayout->addWidget(rendererList, 0,2);
