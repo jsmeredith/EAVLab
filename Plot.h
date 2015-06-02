@@ -71,7 +71,7 @@ struct Plot
             eavlplot->SetField(field);
             eavlplot->SetSingleColor(color);
             eavlplot->SetWireframe(wireframe);
-            eavlplot->SetColorTableName(colortable);
+            eavlplot->SetColorTableByName(colortable);
 
             valid = true;
         }
