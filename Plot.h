@@ -11,6 +11,8 @@ struct Plot
 {
     Pipeline *pipe;
     string colortable;
+    bool reversect;
+    bool logct;
     string cellset;
     string field;
     eavlColor color;
@@ -26,6 +28,8 @@ struct Plot
 
     Plot() : pipe(NULL),
              colortable("default"),
+             reversect(false),
+             logct(false),
              cellset(""),
              field(""),
              color(eavlColor::grey50),
@@ -71,7 +75,8 @@ struct Plot
             eavlplot->SetField(field);
             eavlplot->SetSingleColor(color);
             eavlplot->SetWireframe(wireframe);
-            eavlplot->SetColorTableByName(colortable);
+            eavlplot->SetColorTableByName(colortable,reversect);
+            eavlplot->SetLogarithmicColorScaling(logct);
 
             valid = true;
         }

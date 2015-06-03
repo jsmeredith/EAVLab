@@ -37,6 +37,8 @@ class ELSurfacePlotSettings : public QWidget
     QComboBox *ctCombo;
     QPushButton *colorBtn;
     QCheckBox *wireframeChk;
+    QCheckBox *reverseCTChk;
+    QCheckBox *logCTChk;
     QComboBox *styleCombo;
     Plot *plot;
     vector<string> cellsetList;
@@ -122,6 +124,18 @@ class ELSurfacePlotSettings : public QWidget
         srow++;
         connect(ctCombo, SIGNAL(activated(const QString&)),
                 this, SLOT(ColorTableChanged(const QString&)));
+
+        reverseCTChk = new QCheckBox("Reverse Color Table", this);
+        topLayout->addWidget(reverseCTChk, srow,0, 1,2);
+        srow++;
+        connect(reverseCTChk, SIGNAL(stateChanged(int)),
+                this, SLOT(ReverseCTCheckChanged(int)));
+
+        logCTChk = new QCheckBox("Log Color Table", this);
+        topLayout->addWidget(logCTChk, srow,0, 1,2);
+        srow++;
+        connect(logCTChk, SIGNAL(stateChanged(int)),
+                this, SLOT(LogCTCheckChanged(int)));
 
         colorBtn = new QPushButton(this);
         topLayout->addWidget(new QLabel("Solid Color:", this), srow,0);
@@ -251,6 +265,8 @@ class ELSurfacePlotSettings : public QWidget
         RebuildVarChooser();
         wireframeChk->setChecked(plot->wireframe);
         SetColorTableCombo(plot->colortable);
+        reverseCTChk->setChecked(plot->reversect);
+        logCTChk->setChecked(plot->logct);
         SetColorButtonColor(plot->color);
         for (unsigned int i=0; i<Pipeline::allPipelines.size(); i++)
         {
@@ -353,6 +369,22 @@ class ELSurfacePlotSettings : public QWidget
             return;
 
         plot->colortable = ct.toStdString();
+        emit SomethingChanged();
+    }
+    void ReverseCTCheckChanged(int state)
+    {
+        if (!plot)
+            return;
+
+        plot->reversect = state;
+        emit SomethingChanged();
+    }
+    void LogCTCheckChanged(int state)
+    {
+        if (!plot)
+            return;
+
+        plot->logct = state;
         emit SomethingChanged();
     }
     void VarSelectionChanged()
